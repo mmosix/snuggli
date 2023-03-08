@@ -122,7 +122,7 @@ router.post('/get-user', signupValidation, (req, res, next) => {
   
 // default route
 router.get('/', function (req, res) {
-    return res.send({ error: true, message: 'Hello Snuggli' })
+    return res.send({ error: true, message: 'Hello, this is Snuggli' })
 });
 
 // Retrieve all users 
