@@ -1,5 +1,5 @@
 const Pool = require("pg").Pool;
-const conn = new Pool({
+const pool = new Pool({
     user:'snuggli_user', // default postgres
     host:'dpg-cg4i8bceoogtrlsp473g-a',
     database:'snuggli', // `my_todos_db`
@@ -20,7 +20,7 @@ const conn = new Pool({
 //   console.log('Database is connected successfully !');
 // });
 
-module.exports = conn;
+module.exports = pool;
 
  
  
