@@ -11,7 +11,7 @@ const {
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 router.post('/register', signupValidation, (req, res, next) => {
-    db.query(`SELECT * FROM users WHERE LOWER(email) = LOWER(${req.body.email});`,
+    db.query(`SELECT * FROM users WHERE LOWER(email) = LOWER(${db.escape(req.body.email)});`,
         (err, result) => {
             if (result.length) {
                 return res.status(409).send({
@@ -26,7 +26,7 @@ router.post('/register', signupValidation, (req, res, next) => {
                         });
                     } else {
                         // has hashed pw => add to database
-                        db.query(`INSERT INTO users (name, email, password) VALUES ('${req.body.name}', ${req.body.email}, ${hash})`,
+                        db.query(`INSERT INTO users (name, email, password) VALUES ('${req.body.name}', ${db.escape(req.body.email)}, ${db.escape(hash)})`,
                             (err, result) => {
                                 if (err) {
                                     throw err;
@@ -47,7 +47,7 @@ router.post('/register', signupValidation, (req, res, next) => {
 });
 router.post('/login', loginValidation, (req, res, next) => {
     db.query(
-        `SELECT * FROM users WHERE email = ${req.body.email};`,
+        `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
         (err, result) => {
             // user does not exists
             if (err) {
