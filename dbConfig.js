@@ -1,9 +1,9 @@
 const Pool = require("pg").Pool;
 const conn = new Pool({
-    user:'postgres', // default postgres
-    host:'localhost',
-    database:'name_of_your_database', // `my_todos_db`
-    password:'your_password', //added during PostgreSQL and pgAdmin installation
+    user:'snuggli_user', // default postgres
+    host:'dpg-cg4i8bceoogtrlsp473g-a',
+    database:'snuggli', // `my_todos_db`
+    password:'Q19VrMvzoNkFGrmn3DESADt1OWVFyjYT', //added during PostgreSQL and pgAdmin installation
     port:'5432' //default port
 });
 
