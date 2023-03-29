@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 const createError = require('http-errors');
 
 const express = require('express');
@@ -31,16 +29,8 @@ app.use((err, req, res, next) => {
 });
   
 // set port
-// app.listen(8080, function () {
-//     console.log('Server is running on port 8080');
-// });
- 
-// module.exports = app;
-
-// Use port 8080 by default, unless configured differently in Google Cloud
-const port = process.env.PORT || 8080;
-app.listen(port, () => {
-   console.log(`App is running at: http://localhost:${port}`);
+app.listen(3000, function () {
+    console.log('Server is running on port 3000');
 });
-
- module.exports = app;
+ 
+module.exports = app;
