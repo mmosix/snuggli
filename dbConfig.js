@@ -1,26 +1,30 @@
-// const Pool = require("pg").Pool;
-// const pool = new Pool({
-//     user:'snuggli_user', // default postgres
-//     host:'dpg-cg4i8bceoogtrlsp473g-a',
-//     database:'snuggli', // `my_todos_db`
-//     password:'Q19VrMvzoNkFGrmn3DESADt1OWVFyjYT', //added during PostgreSQL and pgAdmin installation
-//     port:'5432' //default port
-// });
+const mysql = require('mysql');
 
-var mysql = require('mysql');
-var conn = mysql.createConnection({
-  host: '173.231.198.58', // Replace with your host name
-  user: 'inappshub_go',      // Replace with your database username
-  password: 'CxVMW4DNHJMV',      // Replace with your database password
-  database: 'inappshub_snuggli' // // Replace with your database Name
-}); 
- 
+var config = {
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASS,
+};
+
+// Later on when running from Google Cloud, env variables will be passed in container cloud connection config
+if(process.env.NODE_ENV === 'production') {
+  console.log('Running from cloud. Connecting to DB through GCP socket.');
+  config.socketPath = `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`;
+}
+
+// When running from localhost, get the config from .env
+else {
+  console.log('Running from localhost. Connecting to DB directly.');
+  config.host = process.env.DB_HOST;
+}
+
+let conn = mysql.createConnection(config);
+
 conn.connect(function(err) {
   if (err) throw err;
   console.log('Database is connected successfully !');
 });
 
 module.exports = conn;
-
  
  
