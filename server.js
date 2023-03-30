@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const indexRouter = require('./router/router.js');
 const authRouter = require('./router/auth.js');
@@ -19,6 +20,7 @@ app.use(bodyParser.urlencoded({
 }));
  
 app.use(cors());
+authRouter.use(cookieParser());
  
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
