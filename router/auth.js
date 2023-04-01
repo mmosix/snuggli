@@ -17,12 +17,6 @@ const {
 const {
     validationResult
 } = require('express-validator');
-
-// default route
-router.get('/', function (req, res) {
-    return res.send({ error: true, message: 'Hello, this is Snuggli' })
-});
-  
   
   router.post('/forgotPassword', async(req, res, next)=>{
      try{
@@ -54,7 +48,9 @@ router.get('/', function (req, res) {
  
     // send email
     await sendPasswordResetEmail(email,resetToken, origin);
-    res.json({ message: 'Please check your email for a new password' });
+    res.json({ message: 'Please check your email for password reset process',
+               token: resetToken
+            });
       
  
      } catch(e){
@@ -81,6 +77,9 @@ router.get('/', function (req, res) {
            const  password = hashSync(newPassword, salt);
             
            await db.updateUserPassword(password, user.id);
+           
+           // Get all the tokens that were previously set for this user and set used to 1. This will prevent old and expired tokens  from being used. 
+           await db.expireOldTokens(email, 1);
             
            res.json({ message: 'Password reset successful, you can now login with the new password' });
  
@@ -127,7 +126,7 @@ router.post('/login', loginValidation, async(req, res, next) => {
       
      if(!user){
         return res.status(401).send({
-            msg: 'Email or password is incorrect!'
+            message: 'Email or password is incorrect!'
         });
      }
   
@@ -143,14 +142,14 @@ router.post('/login', loginValidation, async(req, res, next) => {
         await db.updateLastLogin(user.id);
         
         return res.status(200).send({
-            msg: 'Logged in!',
+            message: 'Logged in!',
             token: jsontoken,
             user: user
         });
   
      }  else{
         return res.status(401).send({
-            msg: 'Username or password is incorrect!'
+            message: 'Username or password is incorrect!'
         });
      }
 
@@ -165,6 +164,7 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         const name = req.body.name;
         const email = req.body.email;
         let password = req.body.password;
+        let school_id = req.body.school_id;
   
         if (!name || !email || !password) {
             return res.sendStatus(400);
@@ -173,12 +173,12 @@ router.post('/register', signupValidation, async (req, res, next)=>{
      
          if(check){
         return res.status(409).send({
-            msg: 'This user is already in use!'
+            message: 'This user is already in use!'
         });
     } else {
         const salt = genSaltSync(10);
         password = hashSync(password, salt);
-        const userID =  await db.insertUser(name, email, password);
+        const userID =  await db.insertUser(name, email, password, school_id);
 
         const jsontoken = jsonwebtoken.sign({id: userID}, 'the-super-strong-secrect', { expiresIn: '1h'} );
         res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
@@ -186,7 +186,7 @@ router.post('/register', signupValidation, async (req, res, next)=>{
        const user = await db.getUserByID(userID);
         
         return res.status(200).send({
-            msg: 'Registration Successful',
+            message: 'Registration Successful',
             token: jsontoken,
             user: user
         });

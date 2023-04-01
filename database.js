@@ -1,5 +1,7 @@
 const mysql = require('mysql');
    
+
+// Remote server connection
    const pool = mysql.createPool({
        connectionLimit: 10,
        password: 'Jpagh&819jvAO1',
@@ -9,6 +11,18 @@ const mysql = require('mysql');
        port: 3306
 
    });
+
+// Local server connection
+
+//    const pool = mysql.createPool({
+//     connectionLimit: 10,
+//     password: '!@#0809Jabyte',
+//     user: 'root',
+//     database: 'snuggli',
+//     host: 'localhost',
+//     port: 3306
+
+// });
        
        
    let db = {};
@@ -17,7 +31,7 @@ const mysql = require('mysql');
     
    db.allUser = () =>{
        return new Promise((resolve, reject)=>{
-           pool.query('SELECT * FROM User ', (error, users)=>{
+           pool.query('SELECT * FROM users ', (error, users)=>{
                if(error){
                    return reject(error);
                }
@@ -30,7 +44,7 @@ const mysql = require('mysql');
        
    db.getUserByEmail = (email) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('SELECT id, name, email, password FROM users WHERE email = ?', [email], (error, users)=>{
+           pool.query('SELECT U.id, U.name, U.email, U.password, S.school_name FROM users U LEFT OUTER JOIN schools S ON U.school_id = S.school_id WHERE U.email = ?', [email], (error, users)=>{
                if(error){
                    return reject(error);
                }
@@ -44,7 +58,7 @@ const mysql = require('mysql');
        
    db.getUserByID = (id) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('SELECT id, name, email FROM users where id=?', [id], (error, result)=>{
+           pool.query('SELECT U.id, U.name, U.email, U.password, S.school_name FROM users U LEFT OUTER JOIN schools S ON U.school_id = S.school_id WHERE U.id=?', [id], (error, result)=>{
                if(error){
                    return reject(error);
                }
@@ -56,9 +70,9 @@ const mysql = require('mysql');
      
    // ***Create New User data ***
        
-   db.insertUser = (name, email, password) =>{
+   db.insertUser = (name, email, password, school_id) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('INSERT INTO users (name, email, password) VALUES (?,  ?, ?)', [name, email, password], (error, result)=>{
+           pool.query('INSERT INTO users (name, email, password, school_id) VALUES (?,  ?, ?, ?)', [name, email, password, school_id], (error, result)=>{
                if(error){
                    return reject(error);
                }
@@ -70,9 +84,9 @@ const mysql = require('mysql');
      
    // ***Update User Data ***
        
-   db.updateUser = (userName, role, email, password, id) =>{
+   db.updateUser = (name, school_id, email, password, id) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('UPDATE User SET user_name = ?, role= ?, email= ?, password=? WHERE id = ?', [userName, role, email, password, id], (error)=>{
+           pool.query('UPDATE users SET name = ?, school_id= ?, email= ?, password=? WHERE id = ?', [name, school_id, email, password, id], (error)=>{
                if(error){
                    return reject(error);
                }
@@ -100,7 +114,7 @@ const mysql = require('mysql');
     
    db.updateUserPassword = ( password, id) =>{
      return new Promise((resolve, reject)=>{
-         pool.query('UPDATE User SET  password=? WHERE id = ?', [ password, id], (error)=>{
+         pool.query('UPDATE users SET  password=? WHERE id = ?', [ password, id], (error)=>{
              if(error){
                  return reject(error);
              }
@@ -114,7 +128,7 @@ const mysql = require('mysql');
        
    db.deleteUser = (id) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('DELETE FROM User WHERE id = ?', [id], (error)=>{
+           pool.query('DELETE FROM users WHERE id = ?', [id], (error)=>{
                if(error){
                    return reject(error);
                }
@@ -124,10 +138,6 @@ const mysql = require('mysql');
    };
     
     
-    
-       
-  
-  
   // ***Requests to the  resetPasswordToken table ***
   
   db.expireOldTokens = (email, used) =>{
