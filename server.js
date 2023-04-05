@@ -22,10 +22,10 @@ app.use(bodyParser.urlencoded({
 app.use(cors());
 authRouter.use(cookieParser());
  
-app.use('/', indexRouter);
-app.use('/auth', authRouter);
-app.use('/users', userRouter);
-app.use('/schools', schoolRouter);
+app.use('/v1/', indexRouter);
+app.use('/v1/auth', authRouter);
+app.use('/v1/users', userRouter);
+app.use('/v1/schools', schoolRouter);
  
 // Handling Errors
 app.use((err, req, res, next) => {

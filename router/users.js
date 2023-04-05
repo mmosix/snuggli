@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../dbConfig');
 
 // Retrieve all users 
-router.get('/users', function (req, res) {
+router.get('/', function (req, res) {
     db.query('SELECT * FROM users', function (error, results, fields) {
         if (error) throw error;
         return res.send({ error: false, data: results, message: 'users list.' });

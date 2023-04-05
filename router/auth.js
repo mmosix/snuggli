@@ -96,9 +96,7 @@ router.post('/get-user', signupValidation, async(req, res, next) => {
             !req.headers.authorization.startsWith('Bearer') ||
             !req.headers.authorization.split(' ')[1]
         ) {
-            return res.status(422).json({
-                message: "Please provide the token",
-            });
+            return res.status(422).json({ error: true, data: null, message: 'Please provide the token' });
         }
         const theToken = req.headers.authorization.split(' ')[1];
         const decoded = jsonwebtoken.verify(theToken, 'the-super-strong-secrect');
@@ -141,16 +139,15 @@ router.post('/login', loginValidation, async(req, res, next) => {
         
         await db.updateLastLogin(user.id);
         
-        return res.status(200).send({
-            message: 'Logged in!',
+        return res.status(200).send({ 
+            error: false, 
             token: jsontoken,
-            user: user
+            data: user, 
+            message: 'Logged in!'
         });
   
      }  else{
-        return res.status(401).send({
-            message: 'Username or password is incorrect!'
-        });
+        return res.status(401).send({ error: true, data: null, message: 'Username or password is incorrect!' });
      }
 
     } catch(e){
@@ -172,9 +169,7 @@ router.post('/register', signupValidation, async (req, res, next)=>{
          check = await db.getUserByEmail(email);
      
          if(check){
-        return res.status(409).send({
-            message: 'This user is already in use!'
-        });
+        return res.status(409).send({ error: true, data: null, message: 'This user is already in use!' });
     } else {
         const salt = genSaltSync(10);
         password = hashSync(password, salt);
@@ -185,10 +180,11 @@ router.post('/register', signupValidation, async (req, res, next)=>{
 
        const user = await db.getUserByID(userID);
         
-        return res.status(200).send({
-            message: 'Registration Successful',
+        return res.status(200).send({ 
+            error: false, 
             token: jsontoken,
-            user: user
+            data: user, 
+            message: 'Registration Successful'
         });
 
      }
@@ -223,12 +219,11 @@ async function sendPasswordResetEmail(email, resetToken, origin) {
         let message;
          
         if (origin) {
-            const resetUrl = `${origin}/router/resetPassword?token=${resetToken} email=${email}`;
+            const resetUrl = `https://app.snuggli.com/reset-password?token=${resetToken}?email=${email}`;
             message = `<p>Please click the below link to reset your password, the link will be valid for 1 hour:</p>
                        <p><a href="${resetUrl}">${resetUrl}</a></p>`;
         } else {
-            message = `<p>Please use the below token to reset your password with the <code>/router/reset-password</code> api route:</p>
-                       <p><code>${resetToken}</code></p>`;
+            message = `<p>Please use the below token to reset your password with the <code>https://app.snuggli.com/reset-password?token=${resetToken}?email=${email}</code></p>`;
         }
      
         await sendEmail({
