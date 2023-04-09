@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../dbConfig');
+const  { conn, db } = require('../database');
 
 // Retrieve all schools 
 router.get('/all', function (req, res) {
@@ -26,25 +26,6 @@ router.get('/single/:id', function (req, res) {
     });
   
 });
-
- 
- 
-// Retrieve schools with domain 
-router.post('/single', function (req, res, next) {
-  
-    const domain = req.body.domain;
-  
-    if (!domain) {
-        return res.status(400).send({ error: true, data: null, message: 'Please provide valid school email' });
-    }
-  
-    db.query('SELECT * FROM schools where domain=?', domain, function (error, results, fields) {
-        if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'users list.' });
-    });
-  
-});
- 
  
 // Add a new user  
 router.post('/add', function (req, res) {

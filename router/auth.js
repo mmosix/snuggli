@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const  { conn, db } = require('../database');
 
 const jsonwebtoken = require('jsonwebtoken');
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
@@ -25,7 +25,7 @@ const {
       
      const origin = req.header('Origin'); // we are  getting the request origin from  the HOST header
       
-     const user = await db.getUserByEmail(email);
+     const user = await conn.getUserByEmail(email);
       
       
      if(!user){
@@ -33,7 +33,7 @@ const {
         return res.json({status: 'ok'});
      }
      // Get all the tokens that were previously set for this user and set used to 1. This will prevent old and expired tokens  from being used. 
-     await db.expireOldTokens(email, 1);
+     await conn.expireOldTokens(email, 1);
  
      // create reset token that expires after 1 hours
     const resetToken = crypto.randomBytes(6).toString('hex');
@@ -44,7 +44,7 @@ const {
     const expiredAt = resetTokenExpires;
      
     //insert the new token into resetPasswordToken table
-    await db.insertResetToken(email, resetToken,createdAt, expiredAt, 0);
+    await conn.insertResetToken(email, resetToken,createdAt, expiredAt, 0);
  
     // send email
     await sendPasswordResetEmail(email,resetToken, origin);
@@ -70,16 +70,16 @@ const {
              }
          
  
-           const user = await db.getUserByEmail(email);
+           const user = await conn.getUserByEmail(email);
  
             
            const salt = genSaltSync(10);
            const  password = hashSync(newPassword, salt);
             
-           await db.updateUserPassword(password, user.id);
+           await conn.updateUserPassword(password, user.id);
            
            // Get all the tokens that were previously set for this user and set used to 1. This will prevent old and expired tokens  from being used. 
-           await db.expireOldTokens(email, 1);
+           await conn.expireOldTokens(email, 1);
             
            res.json({ message: 'Password reset successful, you can now login with the new password' });
  
@@ -89,7 +89,7 @@ const {
        });
      
     
-router.post('/get-user', signupValidation, async(req, res, next) => {
+router.post('/get-user', async(req, res, next) => {
     try{
         if (
             !req.headers.authorization ||
@@ -102,7 +102,7 @@ router.post('/get-user', signupValidation, async(req, res, next) => {
         const decoded = jsonwebtoken.verify(theToken, 'the-super-strong-secrect');
      
 
-       const results = await db.getUserByID(decoded.id);
+       const results = await conn.getUserByID(decoded.id);
 
         
       // res.json({ message: 'Password reset successful, you can now login with the new password' });
@@ -120,7 +120,7 @@ router.post('/login', loginValidation, async(req, res, next) => {
         
      const email = req.body.email;
      const password = req.body.password;
-     user = await db.getUserByEmail(email);
+     const user = await conn.getPassByEmail(email);
       
      if(!user){
         return res.status(401).send({
@@ -128,8 +128,8 @@ router.post('/login', loginValidation, async(req, res, next) => {
         });
      }
   
-     const isValidPassword = compareSync(password, user.password);
-     if(isValidPassword){
+      const isValidPassword = compareSync(password, user.password);
+    if(isValidPassword){
          user.password = undefined;
          const jsontoken = jsonwebtoken.sign({id: user.id}, 'the-super-strong-secrect', { expiresIn: '1h'} );
          res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
@@ -137,12 +137,13 @@ router.post('/login', loginValidation, async(req, res, next) => {
         // res.json({token: jsontoken});
         //return res.redirect('/mainpage') ;
         
-        await db.updateLastLogin(user.id);
+        await conn.updateLastLogin(user.id);
+        const data = await conn.getUserByEmail(email);
         
         return res.status(200).send({ 
             error: false, 
             token: jsontoken,
-            data: user, 
+            data: data, 
             message: 'Logged in!'
         });
   
@@ -162,23 +163,24 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         const email = req.body.email;
         let password = req.body.password;
         let school_id = req.body.school_id;
+        let username = req.body.username;
   
         if (!name || !email || !password) {
             return res.sendStatus(400);
          }
-         check = await db.getUserByEmail(email);
+         check = await conn.getUserByEmail(email);
      
          if(check){
         return res.status(409).send({ error: true, data: null, message: 'This user is already in use!' });
     } else {
         const salt = genSaltSync(10);
         password = hashSync(password, salt);
-        const userID =  await db.insertUser(name, email, password, school_id);
+        const userID =  await conn.insertUser(name, email, password, school_id, username);
 
         const jsontoken = jsonwebtoken.sign({id: userID}, 'the-super-strong-secrect', { expiresIn: '1h'} );
         res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
 
-       const user = await db.getUserByID(userID);
+       const user = await conn.getUserByID(userID);
         
         return res.status(200).send({ 
             error: false, 
@@ -193,6 +195,62 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         console.log(e);
         res.sendStatus(400);
     }
+});
+ 
+// Retrieve schools with domain 
+router.post('/usernameLookup', function (req, res, next) {
+  
+    const username = req.body.username;
+  
+    if (!username) {
+        return res.status(400).send({ error: true, data: null, message: 'Please provide a username' });
+    }
+  
+    db.query('SELECT username FROM users WHERE username=?', username, function (error, results, fields) {
+        if (error) throw error;
+        if (results  && results.length > 0) {
+            return res.status(200).send({ 
+                error: false, 
+                data: false, 
+                message: 'Username already exists'
+            });
+
+        } else {
+            return res.status(200).send({ 
+                error: false, 
+                data: true, 
+                message: 'Username available'
+            });
+            
+        }
+    });
+  
+});
+ 
+// Retrieve schools with domain 
+router.post('/schoolLookup', function (req, res, next) {
+  
+    const domain = req.body.domain;
+  
+    if (!domain) {
+        return res.status(400).send({ error: true, data: null, message: 'Please provide valid school email' });
+    }
+  
+    db.query('SELECT * FROM schools WHERE school_domain=?', domain, function (error, results, fields) {
+        if (error) throw error;
+        if (results  && results.length > 0) {
+            return res.status(200).send({ 
+                error: false, 
+                data: results[0], 
+                message: 'School lookup successful'
+            });
+
+        } else {
+            return res.status(401).send({ error: true, data: null, message: 'Please provide valid school email' });
+            
+        }
+    });
+  
 });
  
   
@@ -249,7 +307,7 @@ async function sendPasswordResetEmail(email, resetToken, origin) {
     // then we need to verify if the token exist in the resetPasswordToken and not expired.
     const currentTime =  new Date(Date.now());
      
-    const token = await db.findValidToken(resetToken, email, currentTime);
+    const token = await conn.findValidToken(resetToken, email, currentTime);
     
      
     if (!token) { 
