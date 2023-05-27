@@ -6,6 +6,7 @@ const jsonwebtoken = require('jsonwebtoken');
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const cookieParser = require('cookie-parser');
 
+const { val, oneOf } = require('express-validator');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -146,7 +147,6 @@ router.post('/login', loginValidation, async(req, res, next) => {
         
         return res.status(200).send({ 
             error: false, 
-            token: jsontoken,
             data: data, 
             message: 'Logged in!'
         });
@@ -161,7 +161,10 @@ router.post('/login', loginValidation, async(req, res, next) => {
 });
 
  
-router.post('/register', signupValidation, async (req, res, next)=>{
+router.post('/register', val('email').isEmail(), signupValidation, async (req, res, next)=>{
+
+    const errors = oneOf(req);
+
     try{
         const name = req.body.name;
         const email = req.body.email;
@@ -172,6 +175,11 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         if (!name || !email || !password) {
             return res.sendStatus(400);
          }
+        
+      if (!errors.isEmpty() && errors.errors[0].param === 'email') {
+        return res.status(400).send({ error: true, data: null, message: 'Invalid email address. Please try again.' })
+      }
+
          check = await conn.getUserByEmail(email);
      
          if(check){
@@ -185,10 +193,11 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
 
        const user = await conn.getUserByID(userID);
+
+       user.token = jsontoken;
         
         return res.status(200).send({ 
             error: false, 
-            token: jsontoken,
             data: user, 
             message: 'Registration Successful'
         });
@@ -212,12 +221,8 @@ router.post('/usernameLookup', function (req, res, next) {
   
     db.query('SELECT username FROM users WHERE username=?', username, function (error, results, fields) {
         if (error) throw error;
-        if (results  && results.length > 0) {
-            return res.status(200).send({ 
-                error: false, 
-                data: false, 
-                message: 'Username already exists'
-            });
+        if (results && results.length > 0) {
+            return res.status(401).send({ error: true, data: null, message: 'Username already exists' });
 
         } else {
             return res.status(200).send({ 
