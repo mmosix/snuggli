@@ -6,7 +6,7 @@ const jsonwebtoken = require('jsonwebtoken');
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const cookieParser = require('cookie-parser');
 
-const { val, oneOf } = require('express-validator');
+const { check, oneOf } = require('express-validator');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -161,7 +161,7 @@ router.post('/login', loginValidation, async(req, res, next) => {
 });
 
  
-router.post('/register', val('email').isEmail(), signupValidation, async (req, res, next)=>{
+router.post('/register', check('email').isEmail(), signupValidation, async (req, res, next)=>{
 
     const errors = oneOf(req);
 
