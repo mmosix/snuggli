@@ -161,9 +161,7 @@ router.post('/login', loginValidation, async(req, res, next) => {
 });
 
  
-router.post('/register', check('email').isEmail(), signupValidation, async (req, res, next)=>{
-
-    const errors = oneOf(req);
+router.post('/register', signupValidation, async (req, res, next)=>{
 
     try{
         const name = req.body.name;
@@ -176,9 +174,6 @@ router.post('/register', check('email').isEmail(), signupValidation, async (req,
             return res.sendStatus(400);
          }
         
-      if (!errors.isEmpty() && errors.errors[0].param === 'email') {
-        return res.status(400).send({ error: true, data: null, message: 'Invalid email address. Please try again.' })
-      }
 
          check = await conn.getUserByEmail(email);
      
