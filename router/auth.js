@@ -9,6 +9,8 @@ const cookieParser = require('cookie-parser');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
+const privateKey = 'MIICXQIBAAKBgH1B4lvSKZkNElOfkhmAUTmFj+f5/N5d5gxF/DUJ/ZyAO8W6bBUNSj0RHnLYy0FpH3L4Erlt5IxG6rpGQm5cZiIfZ6pbpnY388uxvI4iTTIiVKDuKYnD4CgQ6et7vcwvMzQk56Cy+6wllAqQhnSjwbHV8lM1Yt3jVyYz6jz92y4xAgMBAAECgYBJiQNmGqTXOKhYtaalGAMXfQT2EHpW5dNnwzKExN/CIDp3I7HOTiYWYdV5YTM6rIeNDHyZph12CTBGuXbIqbA/XlCOqPPMjS7vm9DFyeNgvS1hAtcsM0cH/AR4o0rkH9Xu3+sw1vn0llhWJWddpDrS4fbkJvaLstmqPraT6dvBTQJBAPHksbbTaIBplSY6dezrkgf05Cuf7/j0FLWUAYUUJPia1s6Vr9To6Joa55ryOTe7n50YVzq2d4YHnvKz5w4dxX8CQQCEj+SSrvell3mn0Sf3d8O/7FW2iiqBy/n/0xrjuQwIEM+wK7rjJ2M5BPnXQa79ugeelSRMCot7W0M0NYfisRPAkEAv1LfrXexZEAelEoRE/+PVXPBNTAfoo2MA8K5IQU56Nivpl6G4KQHtjwpjEiiMQ7ZxGuIMww3pW9JrTXWPzgVCQJBAIKYD6LCZI7qL5u4Xhqh9b8jVsUQYnY5TyBRSR0ZEsKIEm135i7K8yDXcK70i7Ca630taiBc6zXY919VqBhoY2LdVe4f6xHRuRk4wpccEymnKx5ghmBwUk8SmAhlx84giedsLjehBatbFhkId0lSv+qe82El';
+
 const {
     signupValidation,
     loginValidation
@@ -131,7 +133,7 @@ router.post('/login', loginValidation, async(req, res, next) => {
       const isValidPassword = compareSync(password, user.password);
     if(isValidPassword){
          user.password = undefined;
-         const jsontoken = jsonwebtoken.sign({id: user.id}, 'the-super-strong-secrect', { expiresIn: '1h'} );
+         const jsontoken = jsonwebtoken.sign({id: user.id}, privateKey, { expiresIn: '72h'} );
          res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
   
         // res.json({token: jsontoken});
@@ -139,6 +141,8 @@ router.post('/login', loginValidation, async(req, res, next) => {
         
         await conn.updateLastLogin(user.id);
         const data = await conn.getUserByEmail(email);
+
+        data.token = jsontoken;
         
         return res.status(200).send({ 
             error: false, 
@@ -177,7 +181,7 @@ router.post('/register', signupValidation, async (req, res, next)=>{
         password = hashSync(password, salt);
         const userID =  await conn.insertUser(name, email, password, school_id, username);
 
-        const jsontoken = jsonwebtoken.sign({id: userID}, 'the-super-strong-secrect', { expiresIn: '1h'} );
+        const jsontoken = jsonwebtoken.sign({id: userID}, privateKey, { expiresIn: '72h'} );
         res.cookie('token', jsontoken, { httpOnly: true, secure: true, SameSite: 'strict' , expires: new Date(Number(new Date()) + 30*60*1000) }); //we add secure: true, when using https.
 
        const user = await conn.getUserByID(userID);

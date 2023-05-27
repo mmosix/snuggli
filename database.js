@@ -17,14 +17,15 @@ const connectLocal = {
 };
 
 // Remote server connection
-   const pool = mysql.createPool(connectServer);
-   const db = mysql.createConnection(connectServer); 
+   const pool = mysql.createPool(connectLocal);
+   const db = mysql.createConnection(connectLocal); 
 
   db.connect(function(err) {
     if (err) throw err;
     console.log('Database is connected successfully !');
   });
-           
+       
+       
    let conn = {};
     
    // ***Requests to the User table ***
