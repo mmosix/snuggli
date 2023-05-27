@@ -17,8 +17,8 @@ const connectLocal = {
 };
 
 // Remote server connection
-   const pool = mysql.createPool(connectLocal);
-   const db = mysql.createConnection(connectLocal); 
+   const pool = mysql.createPool(connectServer);
+   const db = mysql.createConnection(connectServer); 
 
   db.connect(function(err) {
     if (err) throw err;
