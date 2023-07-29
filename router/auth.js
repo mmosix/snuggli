@@ -6,7 +6,6 @@ const jsonwebtoken = require('jsonwebtoken');
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const cookieParser = require('cookie-parser');
 
-const { check, oneOf } = require('express-validator');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -179,7 +178,7 @@ router.post('/register', signupValidation, async (req, res, next)=>{
      
          if(check){
         return res.status(409).send({ error: true, data: null, message: 'This user is already in use!' });
-    } else {
+        } else {
         const salt = genSaltSync(10);
         password = hashSync(password, salt);
         const userID =  await conn.insertUser(name, email, password, school_id, username);
