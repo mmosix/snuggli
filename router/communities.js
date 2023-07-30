@@ -116,7 +116,7 @@ router.get('/recommend', verifyToken, (req, res) =>{
     const mood = user.mood;
   
     if (!mood) {
-        return res.status(400).send({ error: true, message: 'Please provide mood'+ user });
+        return res.status(400).send({ error: true, message: 'Please provide mood'+ mood });
     }
   
     db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", mood, function (error, results, fields) {
