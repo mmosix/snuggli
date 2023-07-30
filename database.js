@@ -73,7 +73,7 @@ const connectLocal = {
        
    conn.getUserByID = (id) =>{
        return new Promise((resolve, reject)=>{
-           pool.query('SELECT U.id, U.name, U.email, U.username, S.school_name FROM users U LEFT OUTER JOIN schools S ON U.school_id = S.school_id WHERE U.id=?', [id], (error, result)=>{
+           pool.query('SELECT U.id, U.name, U.email, U.username, U.mood, S.school_name FROM users U LEFT OUTER JOIN schools S ON U.school_id = S.school_id WHERE U.id=?', [id], (error, result)=>{
                if(error){
                    return reject(error);
                }
