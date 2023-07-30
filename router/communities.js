@@ -113,12 +113,13 @@ router.get('/recommend', verifyToken, (req, res) =>{
 
     const user_id = authorizedData.id;
     const user = await conn.getUserByID(user_id);
+    const mood = user.mood;
   
-    if (!community_id) {
-        return res.status(400).send({ error: true, message: 'Please provide community_id' });
+    if (!mood) {
+        return res.status(400).send({ error: true, message: 'Please provide mood' });
     }
   
-    db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", user.mood, function (error, results, fields) {
+    db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", mood, function (error, results, fields) {
         if (error) throw error;
         return res.send({ error: false, data: results, message: 'Recommended community list.' });
     });
