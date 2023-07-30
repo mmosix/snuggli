@@ -137,7 +137,7 @@ router.put('/setMood', verifyToken, (req, res) =>{
             //If token is successfully verified, we can send the autorized data 
   
     let user_id = authorizedData.id;
-    let mood = req.body.mood;
+    let mood = req.body.mood_id;
   
     if (!user_id || !mood) {
         return res.status(400).send({ error: mood, message: 'Please provide user mood' });
