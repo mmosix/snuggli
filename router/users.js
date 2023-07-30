@@ -145,7 +145,34 @@ router.put('/setMood', verifyToken, (req, res) =>{
   
     db.query("UPDATE users SET mood = ? WHERE id = ?", [mood, user_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'mood has been updated successfully.' });
+        return res.send({ error: false, data: results, message: 'Mood has been updated successfully.' });
+    });
+
+        }
+    })
+});
+ 
+//  Update user avatar
+router.put('/setAvatar', verifyToken, (req, res) =>{
+
+    //verify the JWT token generated for the user
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send Forbidden (403)
+            res.sendStatus(403);
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+  
+    let user_id = authorizedData.id;
+    let avatar = req.body.avatar_id;
+  
+    if (!user_id || !avatar) {
+        return res.status(400).send({ error: avatar, message: 'Please provide user avatar' });
+    }
+  
+    db.query("UPDATE users SET mood = ? WHERE id = ?", [avatar, user_id], function (error, results, fields) {
+        if (error) throw error;
+        return res.send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
     });
 
         }
