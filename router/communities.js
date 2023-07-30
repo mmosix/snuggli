@@ -22,10 +22,10 @@ const verifyToken = (req, res, next)=>{
     }
  };
 
-// Retrieve all users 
+// Retrieve all communities
 router.get('/', verifyToken, (req, res) => {
 
-    //verify the JWT token generated for the user
+    //verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send 
@@ -33,22 +33,22 @@ router.get('/', verifyToken, (req, res) => {
         } else {
             //If token is successfully verified, we can send the autorized data 
             
-    db.query('SELECT * , "" as password FROM users', function (error, results, fields) {
+    db.query('SELECT * , "" as password FROM community', function (error, results, fields) {
         if (error) throw error;
         return res.send({ 
             error: false, 
             data: results, 
-            message: 'Users list.' });
+            message: 'community list.' });
     });
         }
     })
 
 });
   
-// Retrieve user with id 
-router.get('/user/:id', verifyToken, (req, res) =>{
+// Retrieve community with id 
+router.get('/single/:id', verifyToken, (req, res) =>{
 
-    //verify the JWT token generated for the user
+    //verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send Forbidden (403)
@@ -56,25 +56,54 @@ router.get('/user/:id', verifyToken, (req, res) =>{
         } else {
             //If token is successfully verified, we can send the autorized data 
   
-    let user_id = req.params.id;
+    let community_id = req.params.id;
   
-    if (!user_id) {
-        return res.status(400).send({ error: true, message: 'Please provide user_id' });
+    if (!community_id) {
+        return res.status(400).send({ error: true, message: 'Please provide community_id' });
     }
   
-    db.query('SELECT * FROM users where id=?', user_id, function (error, results, fields) {
+    db.query('SELECT * FROM community where id=?', community_id, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'users list.' });
+        return res.send({ error: false, data: results[0], message: 'community list.' });
     });
 
         }
     })
 });
+  
+// Retrieve community for user 
+router.get('/my', verifyToken, (req, res) =>{
+
+    //verify the JWT token generated for the community
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send Forbidden (403)
+            res.sendStatus(403);
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+
+            const user_id = authorizedData.id;
+  
+    let community_id = req.params.id;
+  
+    if (!community_id) {
+        return res.status(400).send({ error: true, message: 'Please provide community_id' });
+    }
+  
+    db.query('SELECT * FROM community where id=?', community_id, function (error, results, fields) {
+        if (error) throw error;
+        return res.send({ error: false, data: results[0], message: 'community list.' });
+    });
+
+        }
+    })
+});
+
  
-// Add a new user  
+// Add a new community  
 router.post('/add', verifyToken, (req, res) =>{
 
-    //verify the JWT token generated for the user
+    //verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send Forbidden (403)
@@ -82,15 +111,15 @@ router.post('/add', verifyToken, (req, res) =>{
         } else {
             //If token is successfully verified, we can send the autorized data 
   
-    let user = req.body.user;
+    let community = req.body.community;
   
-    if (!user) {
-        return res.status(400).send({ error:true, message: 'Please provide user' });
+    if (!community) {
+        return res.status(400).send({ error:true, message: 'Please provide community' });
     }
   
-    db.query("INSERT INTO users SET ? ", { user: user }, function (error, results, fields) {
+    db.query("INSERT INTO community SET ? ", { community: community }, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'New user has been created successfully.' });
+        return res.send({ error: false, data: results, message: 'New community has been created successfully.' });
     });
 
         }
@@ -98,10 +127,10 @@ router.post('/add', verifyToken, (req, res) =>{
 });
  
  
-//  Update user with id
+//  Update community with id
 router.put('/update', verifyToken, (req, res) =>{
 
-    //verify the JWT token generated for the user
+    //verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send Forbidden (403)
@@ -109,43 +138,16 @@ router.put('/update', verifyToken, (req, res) =>{
         } else {
             //If token is successfully verified, we can send the autorized data 
   
-    let user_id = req.body.user_id;
-    let user = req.body.user;
+    let community_id = req.body.community_id;
+    let community = req.body.community;
   
-    if (!user_id || !user) {
-        return res.status(400).send({ error: user, message: 'Please provide user and user_id' });
+    if (!community_id || !community) {
+        return res.status(400).send({ error: community, message: 'Please provide community and community_id' });
     }
   
-    db.query("UPDATE users SET user = ? WHERE id = ?", [user, user_id], function (error, results, fields) {
+    db.query("UPDATE community SET community = ? WHERE id = ?", [community, community_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'user has been updated successfully.' });
-    });
-
-        }
-    })
-});
- 
-//  Update user mode
-router.put('/setMood', verifyToken, (req, res) =>{
-
-    //verify the JWT token generated for the user
-    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
-        if(err){
-            //If error send Forbidden (403)
-            res.sendStatus(403);
-        } else {
-            //If token is successfully verified, we can send the autorized data 
-  
-    let user_id = authorizedData.id;
-    let mood = req.body.mood;
-  
-    if (!user_id || !mood) {
-        return res.status(400).send({ error: mood, message: 'Please provide user mood' });
-    }
-  
-    db.query("UPDATE users SET mood = ? WHERE id = ?", [mood, user_id], function (error, results, fields) {
-        if (error) throw error;
-        return res.send({ error: false, data: results, message: 'mood has been updated successfully.' });
+        return res.send({ error: false, data: results, message: 'community has been updated successfully.' });
     });
 
         }
@@ -153,10 +155,10 @@ router.put('/setMood', verifyToken, (req, res) =>{
 });
  
  
-//  Delete user
+//  Delete community
 router.delete('/delete', verifyToken, (req, res) =>{
 
-    //verify the JWT token generated for the user
+    //verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send Forbidden (403)
@@ -164,14 +166,14 @@ router.delete('/delete', verifyToken, (req, res) =>{
         } else {
             //If token is successfully verified, we can send the autorized data 
   
-    let user_id = req.body.user_id;
+    let community_id = req.body.community_id;
   
-    if (!user_id) {
-        return res.status(400).send({ error: true, message: 'Please provide user_id' });
+    if (!community_id) {
+        return res.status(400).send({ error: true, message: 'Please provide community_id' });
     }
-    db.query('DELETE FROM users WHERE id = ?', [user_id], function (error, results, fields) {
+    db.query('DELETE FROM community WHERE id = ?', [community_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'User has been updated successfully.' });
+        return res.send({ error: false, data: results, message: 'community has been updated successfully.' });
     });
 
         }

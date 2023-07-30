@@ -101,7 +101,7 @@ router.post('/get-user', async(req, res, next) => {
             return res.status(422).json({ error: true, data: null, message: 'Please provide the token' });
         }
         const theToken = req.headers.authorization.split(' ')[1];
-        const decoded = jsonwebtoken.verify(theToken, 'the-super-strong-secrect');
+        const decoded = jsonwebtoken.verify(theToken, privateKey);
      
 
        const results = await conn.getUserByID(decoded.id);
@@ -334,7 +334,7 @@ async function  verifyToken  (req, res, next){
                });
      } else{
   
-         jsonwebtoken.verify(token, process.env.SECRET_KEY, (err, authData)=>{
+         jsonwebtoken.verify(token, privateKey, (err, authData)=>{
              if(err){
                  res.json({
                      message: "Invalid Token..."
