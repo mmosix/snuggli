@@ -118,9 +118,9 @@ router.get('/recommend', verifyToken, (req, res) =>{
         return res.status(400).send({ error: true, message: 'Please provide community_id' });
     }
   
-    db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", community_id, function (error, results, fields) {
+    db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", user.mood, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'community list.' });
+        return res.send({ error: false, data: results, message: 'Recommended community list.' });
     });
 
         }
