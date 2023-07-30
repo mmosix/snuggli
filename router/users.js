@@ -170,7 +170,7 @@ router.put('/setAvatar', verifyToken, (req, res) =>{
         return res.status(400).send({ error: avatar, message: 'Please provide user avatar' });
     }
   
-    db.query("UPDATE users SET mood = ? WHERE id = ?", [avatar, user_id], function (error, results, fields) {
+    db.query("UPDATE users SET avatar = ? WHERE id = ?", [avatar, user_id], function (error, results, fields) {
         if (error) throw error;
         return res.send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
     });
