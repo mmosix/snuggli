@@ -13,6 +13,7 @@ const schoolRouter = require('./router/schools.js');
 const moodRouter = require('./router/moods.js');
 const avatarRouter = require('./router/avatars.js');
 const affirmationRouter = require('./router/affirmation.js');
+const communityRouter = require('./router/communities.js');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/v1/schools', schoolRouter);
 app.use('/v1/moods', moodRouter);
 app.use('/v1/avatars', avatarRouter);
 app.use('/v1/affirmation', affirmationRouter);
+app.use('/v1/communities', communityRouter);
  
 // Handling Errors
 app.use((err, req, res, next) => {
