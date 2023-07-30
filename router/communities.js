@@ -33,7 +33,7 @@ router.get('/', verifyToken, (req, res) => {
         } else {
             //If token is successfully verified, we can send the autorized data 
             
-    db.query('SELECT * , "" as password FROM community', function (error, results, fields) {
+    db.query('SELECT * FROM community', function (error, results, fields) {
         if (error) throw error;
         return res.send({ 
             error: false, 
@@ -64,7 +64,7 @@ router.get('/single/:id', verifyToken, (req, res) =>{
   
     db.query('SELECT * FROM community where id=?', community_id, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'community list.' });
+        return res.send({ error: false, data: results[0], message: 'Single community by id.' });
     });
 
         }
@@ -91,6 +91,34 @@ router.get('/my', verifyToken, (req, res) =>{
     }
   
     db.query('SELECT * FROM community where id=?', community_id, function (error, results, fields) {
+        if (error) throw error;
+        return res.send({ error: false, data: results[0], message: 'community list.' });
+    });
+
+        }
+    })
+});
+
+  
+// Retrieve recomended community for user 
+router.get('/recommend', verifyToken, (req, res) =>{
+
+    //verify the JWT token generated for the community
+    jsonwebtoken.verify(req.token, privateKey, async(err, authorizedData) => {
+        if(err){
+            //If error send Forbidden (403)
+            res.sendStatus(403);
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+
+    const user_id = authorizedData.id;
+    const user = await conn.getUserByID(user_id);
+  
+    if (!community_id) {
+        return res.status(400).send({ error: true, message: 'Please provide community_id' });
+    }
+  
+    db.query("SELECT * FROM community  WHERE moods LIKE '%?%'", community_id, function (error, results, fields) {
         if (error) throw error;
         return res.send({ error: false, data: results[0], message: 'community list.' });
     });
