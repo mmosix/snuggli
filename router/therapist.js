@@ -64,7 +64,7 @@ router.get('/reviews/:id', verifyToken, (req, res) =>{
   
     db.query('SELECT * FROM therapistreview where therapist_id=?', therapist_id, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'Single therapist by id.' });
+        return res.send({ error: false, data: results, message: 'All reviews  by therapist id.' });
     });
 
         }
