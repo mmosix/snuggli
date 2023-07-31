@@ -33,7 +33,7 @@ router.get('/', verifyToken, (req, res) => {
         } else {
             //If token is successfully verified, we can send the autorized data 
             
-    db.query('SELECT * FROM therapist', function (error, results, fields) {
+    db.query('SELECT *, (SELECT count(*) / count(distinct therapist_id) FROM therapistreview WHERE therapist_id = 1) AS reviews FROM therapist', function (error, results, fields) {
         if (error) throw error;
         return res.send({ 
             error: false, 
