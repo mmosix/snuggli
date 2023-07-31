@@ -33,7 +33,7 @@ router.get('/', verifyToken, (req, res) => {
         } else {
             //If token is successfully verified, we can send the autorized data 
             
-    db.query('SELECT *, (SELECT count(*) / count(distinct therapist_id) FROM therapistreview WHERE therapist_id = 1) AS reviews FROM therapist', function (error, results, fields) {
+    db.query('SELECT T.*, (SELECT SUM(R.ratings) / count(R.therapist_id) FROM therapistreview R WHERE R.therapist_id = T.id  ) AS average_reviews FROM therapist T', function (error, results, fields) {
         if (error) throw error;
         return res.send({ 
             error: false, 
@@ -43,6 +43,32 @@ router.get('/', verifyToken, (req, res) => {
         }
     })
 
+});
+  
+// Retrieve therapist with id 
+router.get('/reviews/:id', verifyToken, (req, res) =>{
+
+    //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send Forbidden (403)
+            res.sendStatus(403);
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+  
+    let therapist_id = req.params.id;
+  
+    if (!therapist_id) {
+        return res.status(400).send({ error: true, message: 'Please provide therapist_id' });
+    }
+  
+    db.query('SELECT * FROM therapistreview where therapist_id=?', therapist_id, function (error, results, fields) {
+        if (error) throw error;
+        return res.send({ error: false, data: results[0], message: 'Single therapist by id.' });
+    });
+
+        }
+    })
 });
   
 // Retrieve therapist with id 
