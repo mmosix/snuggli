@@ -145,7 +145,8 @@ router.put('/setMood', verifyToken, (req, res) =>{
   
     db.query("UPDATE users SET mood = ? WHERE id = ?", [mood, user_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Mood has been updated successfully.' });
+        return res.send({ error: false, data: 
+            {}, message: 'Mood has been updated successfully.' });
     });
 
         }
@@ -172,7 +173,7 @@ router.put('/setAvatar', verifyToken, (req, res) =>{
   
     db.query("UPDATE users SET avatar = ? WHERE id = ?", [avatar, user_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
+        return res.send({ error: false, data: {}, message: 'Avatar has been updated successfully.' });
     });
 
         }
