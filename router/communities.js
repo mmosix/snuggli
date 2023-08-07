@@ -172,7 +172,7 @@ router.get('/recommend', verifyToken, (req, res) => {
 
         } catch (err) {
             
-            res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+            // res.status(422).send({ error: true,  message: 'Please provide authorization token' });
 
             console.error("Something went wrong")
             console.error(err)
