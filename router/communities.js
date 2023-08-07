@@ -36,16 +36,8 @@ router.get('/', verifyToken, (req, res) => {
             
     let user_id = authorizedData.id;
             
-    db.query('SELECT C.*, COUNT(CF.community_id) AS followers FROM community C LEFT OUTER JOIN follow_community CF ON CF.community_id = C.id GROUP BY C.id',  function (error, results, fields) {
+    db.query('SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id GROUP BY C.id', user_id,  function (error, results, fields) {
         if (error) throw error;
-
-        while (results) {
-            db.query('SELECT IF(user_id = ?, true, false) AS following FROM follow_community WHERE community_id = ?', user_id, results[0].id, function(error,results1,filelds){
-                if(error) throw err;
-
-                results.push(results1[0].following)
-            });
-        }
 
         return res.send({ 
             error: false, 
