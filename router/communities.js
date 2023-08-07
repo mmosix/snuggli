@@ -157,9 +157,9 @@ router.get('/recommend', verifyToken, (req, res) => {
             //If token is successfully verified, we can send the autorized data 
 
             
-    let user_id = authorizedData.id;
-    let user = await conn.getUserByID(user_id);
-    let mood = user.mood;
+    const user_id = authorizedData.id;
+    const user = await conn.getUserByID(user_id);
+    const mood = user.mood;
   
     if (!mood) {
         return res.status(400).send({ error: true, message: 'Please provide mood'+ mood });
