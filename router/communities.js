@@ -125,6 +125,8 @@ router.get('/recommend', verifyToken, (req, res) =>{
   
     db.query("SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.moods LIKE '%?%' GROUP BY C.id", user_id, mood, function (error, results, fields) {
         if (error) throw error;
+        
+        return res.send({ error: false, data: results, message: 'Recommended community list.' });
 
           // If the first element does not exist
         //   if (!results.length) {
@@ -136,8 +138,6 @@ router.get('/recommend', verifyToken, (req, res) =>{
         //     return res.send({ error: false, data: results, message: 'Recommended community list.' });
         //   }
 
-        
-        return res.send({ error: false, data: results, message: 'Recommended community list.' });
 
     });
 
