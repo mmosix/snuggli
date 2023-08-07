@@ -32,9 +32,23 @@ router.get('/', verifyToken, (req, res) => {
         res.status(422).send({ error: true,  message: 'Please provide authorization token' });
         } else {
             //If token is successfully verified, we can send the autorized data 
+
             
-    db.query('SELECT * FROM community', function (error, results, fields) {
+    let user_id = authorizedData.id;
+            
+    db.query('SELECT C.*, COUNT(CF.community_id) AS followers FROM community C LEFT OUTER JOIN follow_community CF ON CF.community_id = C.id GROUP BY C.id',  function (error, results, fields) {
         if (error) throw error;
+
+        async.eachSeries(results,function(data,callback){ // It will be executed one by one
+            //Here it will be wait query execute. It will work like synchronous
+            db.query('SELECT IF(user_id = ?, true, false) AS following FROM follow_community WHERE community_id = ?', user_id, results[0].id, function(error,results1,filelds){
+                if(error) throw err;
+
+                results.push(results1[0].following)
+                callback();
+            });
+        })
+
         return res.send({ 
             error: false, 
             data: results, 
