@@ -130,10 +130,6 @@ router.get('/recommend', verifyToken, (req, res) => {
             return res.send({ error: false, data: results, message: 'Recommended community list.' });
           }
 
-        // return res.send({ 
-        //     error: false, 
-        //     data: results, 
-        //     message: 'community list.' });
     });
         
 
