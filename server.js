@@ -15,6 +15,7 @@ const avatarRouter = require('./router/avatars.js');
 const affirmationRouter = require('./router/affirmation.js');
 const communityRouter = require('./router/communities.js');
 const therapistRouter = require('./router/therapist.js');
+const postRouter = require('./router/post.js');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/v1/avatars', avatarRouter);
 app.use('/v1/affirmation', affirmationRouter);
 app.use('/v1/communities', communityRouter);
 app.use('/v1/therapist', therapistRouter);
+app.use('/v1/post', postRouter);
  
 // Handling Errors
 app.use((err, req, res, next) => {
