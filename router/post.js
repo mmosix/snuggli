@@ -36,29 +36,6 @@ const verifyToken = (req, res, next)=>{
     }
  };
 
-// Retrieve all users 
-router.get('/', verifyToken, (req, res) => {
-
-    //verify the JWT token generated for the user
-    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
-        if(err){
-            //If error send 
-        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
-        } else {
-            //If token is successfully verified, we can send the autorized data 
-            
-    db.query('SELECT * , "" as password FROM users', function (error, results, fields) {
-        if (error) throw error;
-        return res.send({ 
-            error: false, 
-            data: results, 
-            message: 'Users list.' });
-    });
-        }
-    })
-
-});
-
     //verify the JWT token generated for the therapist
     // jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
     //     if(err){
@@ -288,7 +265,7 @@ router.post('/comment', (req, res) => {
   });
   
   // Retrieve Post Details
-  router.get('/post/:postId', (req, res) => {
+  router.get('/:postId', (req, res) => {
     const postId = req.params.postId;
   
     const query = 'SELECT p.*, u.username, COUNT(pl.id) AS num_likes ' +
@@ -314,6 +291,46 @@ router.post('/comment', (req, res) => {
         }
       }
     });
+  });  
+
+  // Retrieve private Post
+  router.get('/public', (req, res) => {
+    const postId = req.params.postId;
+    
+    // verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+            
+    const query = 'SELECT p.*, COUNT(pl.id) AS num_likes ' +
+                  'FROM posts p ' +
+                  'LEFT JOIN post_likes pl ON p.id = pl.post_id ' +
+                  'WHERE p.is_public = true ' +
+                  'GROUP BY p.id';
+
+    db.query(query, (err, result) => {
+      if (err) {
+        console.error('Error retrieving post details:', err);
+        res.status(500).send('Error retrieving post details');
+      } else {
+        
+        if (!post) {
+          res.status(404).send('Post not found');
+        } else {
+            return res.send({ 
+                error: false, 
+                data: result, 
+                message: 'Post data' 
+            });
+        }
+      }
+    });
+
+        }
+    })
   });
 
 module.exports = router;
