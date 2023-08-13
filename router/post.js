@@ -317,7 +317,7 @@ router.post('/comment', (req, res) => {
         res.status(500).send('Error retrieving post details');
       } else {
         
-        if (!post) {
+        if (!result) {
           res.status(404).send('Post not found');
         } else {
             return res.send({ 
