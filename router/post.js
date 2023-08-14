@@ -294,7 +294,7 @@ router.post('/comment', (req, res) => {
   });  
 
   // Retrieve private Post
-  router.get('/public', (req, res) => {
+  router.get('/public', verifyToken, (req, res) => {
     
     // verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
