@@ -359,7 +359,6 @@ router.post('/comment', (req, res) => {
     }
   });
 
-
         }
     })
 
@@ -385,56 +384,51 @@ router.post('/comment', (req, res) => {
     COUNT(pl.id) AS num_likes,
     c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
   FROM posts p
-  INNER JOIN post_likes pl ON p.id = pl.post_id
+  INNER JOIN user_groups ug ON p.group_id = ug.group_id
+  LEFT JOIN post_likes pl ON p.id = pl.post_id
   LEFT JOIN comments c ON p.id = c.post_id
   LEFT JOIN comment_likes cl ON c.id = cl.comment_id
-  WHERE p.is_public = 0 AND p.user_id IN (
-    SELECT user_id FROM user_groups WHERE group_id IN (
-      SELECT group_id FROM user_groups WHERE user_id = ?
-    )
-  )
+  WHERE ug.user_id = ?
   GROUP BY p.id, c.id
   ORDER BY p.id, c.id
     `;
-    
 
-  db.query(query, [userId], (err, result) => {
-    if (err) {
-      console.error('Error retrieving private posts:', err);
-      res.status(500).send('Error retrieving private posts');
-    } else {
-      const postsWithComments = [];
-      let currentPost = null;
-
-      for (const row of result) {
-        if (!currentPost || currentPost.post_id !== row.post_id) {
-          currentPost = {
-            post_id: row.post_id,
-            post_content: row.post_content,
-            post_image: row.post_image,
-            num_likes: row.num_likes,
-            comments: []
-          };
-          postsWithComments.push(currentPost);
+    db.query(query, [userId], (err, result) => {
+      if (err) {
+        console.error('Error retrieving private posts:', err);
+        res.status(500).send('Error retrieving private posts');
+      } else {
+        const postsWithComments = [];
+        let currentPost = null;
+  
+        for (const row of result) {
+          if (!currentPost || currentPost.post_id !== row.post_id) {
+            currentPost = {
+              post_id: row.post_id,
+              post_content: row.post_content,
+              post_image: row.post_image,
+              num_likes: row.num_likes,
+              comments: []
+            };
+            postsWithComments.push(currentPost);
+          }
+  
+          if (row.comment_id) {
+            const comment = {
+              comment_id: row.comment_id,
+              comment_content: row.comment_content,
+              num_comment_likes: row.num_comment_likes
+            };
+            currentPost.comments.push(comment);
+          }
         }
-
-        if (row.comment_id) {
-          const comment = {
-            comment_id: row.comment_id,
-            comment_content: row.comment_content,
-            num_comment_likes: row.num_comment_likes
-          };
-          currentPost.comments.push(comment);
-        }
+        return res.send({ 
+            error: false, 
+            data: postsWithComments, 
+            message: 'Private post data' 
+        });
       }
-      return res.send({ 
-          error: false, 
-          data: postsWithComments, 
-          message: 'Private post data' 
-      });
-
-    }
-  });
+    });
 
         }
     })
