@@ -295,38 +295,73 @@ router.post('/comment', (req, res) => {
 
   // Retrieve public Post
   router.get('/public', verifyToken, (req, res) => {
-    
-    // verify the JWT token generated for the therapist
+
+    //verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
             //If error send 
         res.status(422).send({ error: true,  message: 'Please provide authorization token' });
         } else {
             //If token is successfully verified, we can send the autorized data 
-            
-    const query = 'SELECT p.*, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = true GROUP BY p.id';
 
-    db.query(query, (err, result) => {
-      if (err) {
-        console.error('Error retrieving post details:', err);
-        res.status(500).send('Error retrieving post details');
-      } else {
-        
-        if (!result) {
-          res.status(404).json({dd: 'Post not found', mm: result});
-        } else {
-            return res.send({ 
-                error: false, 
-                data: result, 
-                message: 'Post data' 
-            });
+            const userId = authorizedData.id;
+            
+            
+  const query = `
+  SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
+    COUNT(pl.id) AS num_likes,
+    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
+  FROM posts p
+  INNER JOIN post_likes pl ON p.id = pl.post_id
+  LEFT JOIN comments c ON p.id = c.post_id
+  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+  WHERE p.is_public = 1
+  GROUP BY p.id, c.id
+  ORDER BY p.id, c.id
+    `;
+    
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error('Error retrieving public posts:', err);
+      res.status(500).send('Error retrieving public posts');
+    } else {
+      const postsWithComments = [];
+      let currentPost = null;
+
+      for (const row of result) {
+        if (!currentPost || currentPost.post_id !== row.post_id) {
+          currentPost = {
+            post_id: row.post_id,
+            post_content: row.post_content,
+            post_image: row.post_image,
+            num_likes: row.num_likes,
+            comments: []
+          };
+          postsWithComments.push(currentPost);
+        }
+
+        if (row.comment_id) {
+          const comment = {
+            comment_id: row.comment_id,
+            comment_content: row.comment_content,
+            num_comment_likes: row.num_comment_likes
+          };
+          currentPost.comments.push(comment);
         }
       }
-    });
+      return res.send({ 
+          error: false, 
+          data: postsWithComments, 
+          message: 'public post data' 
+      });
+    }
+  });
 
         }
     })
+
   });
+
 
   // Retrieve private Post
   router.get('/private', verifyToken, (req, res) => {
@@ -389,8 +424,12 @@ router.post('/comment', (req, res) => {
           currentPost.comments.push(comment);
         }
       }
+      return res.send({ 
+          error: false, 
+          data: postsWithComments, 
+          message: 'Private post data' 
+      });
 
-      res.json(postsWithComments);
     }
   });
 
