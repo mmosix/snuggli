@@ -309,57 +309,56 @@ router.post('/comment', (req, res) => {
             
   const query = `
   SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
-      COUNT(pl.id) AS num_likes,
-      c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
-    FROM posts p
-    INNER JOIN post_likes pl ON p.id = pl.post_id
-    LEFT JOIN (
-      SELECT post_id, id, content
-      FROM comments
-      ORDER BY post_id, id
-    ) c ON p.id = c.post_id
-    LEFT JOIN comment_likes cl ON c.id = cl.comment_id
-    WHERE p.is_public = 1
-    GROUP BY p.id, c.id
-    ORDER BY p.id, c.id
+    COUNT(pl.id) AS num_likes,
+    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
+  FROM posts p
+  LEFT JOIN post_likes pl ON p.id = pl.post_id
+  LEFT JOIN comments c ON p.id = c.post_id
+  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+  WHERE p.is_public = 1
+  GROUP BY p.id, c.id
+  ORDER BY p.id, c.id
     `;
 
-    db.query(query, (err, result) => {
-      if (err) {
-        console.error('Error retrieving public posts:', err);
-        res.status(500).send('Error retrieving public posts');
-      } else {
-        const postsWithComments = [];
-        let currentPost = null;
-  
-        for (const row of result) {
-          if (!currentPost || currentPost.post_id !== row.post_id) {
-            currentPost = {
-              post_id: row.post_id,
-              post_content: row.post_content,
-              post_image: row.post_image,
-              num_likes: row.num_likes,
-              comments: []
-            };
-            postsWithComments.push(currentPost);
-          }
-  
-          if (row.comment_id) {
-            const comment = {
-              comment_id: row.comment_id,
-              comment_content: row.comment_content,
-              num_comment_likes: row.num_comment_likes
-            };
-            currentPost.comments.push(comment);
-          }
+    
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error('Error retrieving public posts:', err);
+      res.status(500).send('Error retrieving public posts');
+    } else {
+      const postsWithComments = [];
+      let currentPost = null;
+
+      for (const row of result) {
+        if (!currentPost || currentPost.post_id !== row.post_id) {
+          currentPost = {
+            post_id: row.post_id,
+            post_content: row.post_content,
+            post_image: row.post_image,
+            num_likes: row.num_likes,
+            comments: []
+          };
+          postsWithComments.push(currentPost);
         }
-        return res.send({ 
-            error: false, 
-            data: postsWithComments, 
-            message: 'public post data' 
-        });
+
+        if (row.comment_id) {
+          const comment = {
+            comment_id: row.comment_id,
+            comment_content: row.comment_content,
+            num_comment_likes: row.num_comment_likes
+          };
+          currentPost.comments.push(comment);
+        }
       }
-    });
+
+      return res.send({ 
+          error: false, 
+          data: postsWithComments, 
+          message: 'public post data' 
+      });
+    }
+  });
+
 
         }
     })
