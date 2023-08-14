@@ -293,7 +293,7 @@ router.post('/comment', (req, res) => {
     });
   });  
 
-  // Retrieve private Post
+  // Retrieve public Post
   router.get('/public', verifyToken, (req, res) => {
     
     // verify the JWT token generated for the therapist
@@ -327,5 +327,70 @@ router.post('/comment', (req, res) => {
         }
     })
   });
+
+  // Retrieve private Post
+  router.get('/private', verifyToken, (req, res) => {
+
+    //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+
+            const userId = authorizedData.id;
+
+            const query = `
+              SELECT p.*, COUNT(pl.id) AS num_likes, 
+                JSON_ARRAYAGG(JSON_OBJECT('id', c.id, 'content', c.content, 'num_likes', COUNT(cl.id))) AS comments
+              FROM posts p
+              INNER JOIN post_likes pl ON p.id = pl.post_id
+              LEFT JOIN comments c ON p.id = c.post_id
+              LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+              WHERE p.user_id = ? AND p.is_public = 0
+              GROUP BY p.id, c.id
+            `;
+          
+            db.query(query, [userId], (err, result) => {
+              if (err) {
+                console.error('Error retrieving private posts:', err);
+                res.status(500).send('Error retrieving private posts');
+              } else {
+                const postsWithComments = result.reduce((acc, post) => {
+                  const existingPost = acc.find(p => p.id === post.id);
+                  if (!existingPost) {
+                    const { comments, ...rest } = post;
+                    const commentsArray = post.comments ? JSON.parse(post.comments) : [];
+                    acc.push({
+                      ...rest,
+                      comments: commentsArray.map(comment => ({
+                        id: comment.id,
+                        content: comment.content,
+                        num_likes: comment.num_likes
+                      }))
+                    });
+                  } else if (post.comments) {
+                    const commentsArray = JSON.parse(post.comments);
+                    existingPost.comments.push(
+                      ...commentsArray.map(comment => ({
+                        id: comment.id,
+                        content: comment.content,
+                        num_likes: comment.num_likes
+                      }))
+                    );
+                  }
+                  return acc;
+                }, []);
+          
+                res.json(postsWithComments);
+              }
+            });
+
+        }
+    })
+
+  });
+  
 
 module.exports = router;
