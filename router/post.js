@@ -381,16 +381,19 @@ router.post('/comment', (req, res) => {
             
   const query = `
   SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
-    COUNT(pl.id) AS num_likes,
-    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
-  FROM posts p
-  INNER JOIN user_groups ug ON p.group_id = ug.group_id
-  LEFT JOIN post_likes pl ON p.id = pl.post_id
-  LEFT JOIN comments c ON p.id = c.post_id
-  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+  COUNT(pl.id) AS num_likes,
+  c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
+FROM posts p
+INNER JOIN post_likes pl ON p.id = pl.post_id
+LEFT JOIN comments c ON p.id = c.post_id
+LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+WHERE p.is_public = 0 AND p.id IN (
+  SELECT gp.post_id FROM group_posts gp
+  INNER JOIN user_groups ug ON gp.group_id = ug.group_id
   WHERE ug.user_id = ?
-  GROUP BY p.id, c.id
-  ORDER BY p.id, c.id
+)
+GROUP BY p.id, c.id
+ORDER BY p.id, c.id
     `;
 
     db.query(query, [userId], (err, result) => {
