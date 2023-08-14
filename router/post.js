@@ -313,7 +313,7 @@ router.post('/comment', (req, res) => {
       } else {
         
         if (!result) {
-          res.status(404).send('Post not found');
+          res.status(404).json({dd: 'Post not found', mm: result});
         } else {
             return res.send({ 
                 error: false, 
