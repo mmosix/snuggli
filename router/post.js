@@ -265,7 +265,7 @@ router.post('/comment', (req, res) => {
   });
   
   // Retrieve Post Details
-  router.get('/:postId', (req, res) => {
+  router.get('/:postId/details', (req, res) => {
     const postId = req.params.postId;
   
     const query = 'SELECT p.*, u.username, COUNT(pl.id) AS num_likes ' +
