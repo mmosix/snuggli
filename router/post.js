@@ -395,43 +395,44 @@ WHERE p.is_public = 0 AND p.id IN (
 GROUP BY p.id, c.id
 ORDER BY p.id, c.id
     `;
+    
+  db.query(query, [userId], (err, result) => {
+    if (err) {
+      console.error('Error retrieving private posts:', err);
+      res.status(500).send('Error retrieving private posts');
+    } else {
+      const postsWithComments = [];
+      let currentPost = null;
 
-    db.query(query, [userId], (err, result) => {
-      if (err) {
-        console.error('Error retrieving private posts:', err);
-        res.status(500).send('Error retrieving private posts');
-      } else {
-        const postsWithComments = [];
-        let currentPost = null;
-  
-        for (const row of result) {
-          if (!currentPost || currentPost.post_id !== row.post_id) {
-            currentPost = {
-              post_id: row.post_id,
-              post_content: row.post_content,
-              post_image: row.post_image,
-              num_likes: row.num_likes,
-              comments: []
-            };
-            postsWithComments.push(currentPost);
-          }
-  
-          if (row.comment_id) {
-            const comment = {
-              comment_id: row.comment_id,
-              comment_content: row.comment_content,
-              num_comment_likes: row.num_comment_likes
-            };
-            currentPost.comments.push(comment);
-          }
+      for (const row of result) {
+        if (!currentPost || currentPost.post_id !== row.post_id) {
+          currentPost = {
+            post_id: row.post_id,
+            post_content: row.post_content,
+            post_image: row.post_image,
+            num_likes: row.num_likes,
+            comments: []
+          };
+          postsWithComments.push(currentPost);
         }
-        return res.send({ 
-            error: false, 
-            data: postsWithComments, 
-            message: 'Private post data' 
-        });
+
+        if (row.comment_id) {
+          const comment = {
+            comment_id: row.comment_id,
+            comment_content: row.comment_content,
+            num_comment_likes: row.num_comment_likes
+          };
+          currentPost.comments.push(comment);
+        }
       }
+
+      return res.send({ 
+        error: false, 
+        data: postsWithComments, 
+        message: 'Private post data' 
     });
+    }
+  });
 
         }
     })
