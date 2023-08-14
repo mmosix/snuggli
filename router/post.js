@@ -344,60 +344,55 @@ router.post('/comment', (req, res) => {
             
   const query = `
   SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
-      COUNT(pl.id) AS num_likes,
-      c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
-    FROM posts p
-    INNER JOIN post_likes pl ON p.id = pl.post_id
-    LEFT JOIN comments c ON p.id = c.post_id
-    LEFT JOIN comment_likes cl ON c.id = cl.comment_id
-    WHERE p.is_public = 0 AND p.user_id IN (
-      SELECT user_id FROM user_groups WHERE group_id IN (
-        SELECT group_id FROM user_groups WHERE user_id = ?
-      )
+    COUNT(pl.id) AS num_likes,
+    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
+  FROM posts p
+  INNER JOIN post_likes pl ON p.id = pl.post_id
+  LEFT JOIN comments c ON p.id = c.post_id
+  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+  WHERE p.is_public = 0 AND p.user_id IN (
+    SELECT user_id FROM user_groups WHERE group_id IN (
+      SELECT group_id FROM user_groups WHERE user_id = ?
     )
-    GROUP BY p.id, c.id
+  )
+  GROUP BY p.id, c.id
+  ORDER BY p.id, c.id
     `;
-
-    db.query(query, [userId], (err, result) => {
-        if (err) {
-          console.error('Error retrieving private posts:', err);
-          res.status(500).send('Error retrieving private posts');
-        } else {
-          const postsWithComments = result.reduce((acc, row) => {
-            const existingPost = acc.find(p => p.post_id === row.post_id);
-            if (!existingPost) {
-              const post = {
-                post_id: row.post_id,
-                post_content: row.post_content,
-                post_image: row.post_image,
-                num_likes: row.num_likes,
-                comments: []
-              };
-              if (row.comment_id) {
-                const comment = {
-                  comment_id: row.comment_id,
-                  comment_content: row.comment_content,
-                  num_comment_likes: row.num_comment_likes
-                };
-                post.comments.push(comment);
-              }
-              acc.push(post);
-            } else {
-              if (row.comment_id) {
-                const comment = {
-                  comment_id: row.comment_id,
-                  comment_content: row.comment_content,
-                  num_comment_likes: row.num_comment_likes
-                };
-                existingPost.comments.push(comment);
-              }
-            }
-            return acc;
-          }, []);
     
-          res.json(postsWithComments);
+
+  db.query(query, [userId], (err, result) => {
+    if (err) {
+      console.error('Error retrieving private posts:', err);
+      res.status(500).send('Error retrieving private posts');
+    } else {
+      const postsWithComments = [];
+      let currentPost = null;
+
+      for (const row of result) {
+        if (!currentPost || currentPost.post_id !== row.post_id) {
+          currentPost = {
+            post_id: row.post_id,
+            post_content: row.post_content,
+            post_image: row.post_image,
+            num_likes: row.num_likes,
+            comments: []
+          };
+          postsWithComments.push(currentPost);
         }
-      });
+
+        if (row.comment_id) {
+          const comment = {
+            comment_id: row.comment_id,
+            comment_content: row.comment_content,
+            num_comment_likes: row.num_comment_likes
+          };
+          currentPost.comments.push(comment);
+        }
+      }
+
+      res.json(postsWithComments);
+    }
+  });
 
         }
     })
