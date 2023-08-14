@@ -295,7 +295,6 @@ router.post('/comment', (req, res) => {
 
   // Retrieve private Post
   router.get('/public', (req, res) => {
-    const postId = req.params.postId;
     
     // verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
@@ -305,11 +304,7 @@ router.post('/comment', (req, res) => {
         } else {
             //If token is successfully verified, we can send the autorized data 
             
-    const query = 'SELECT p.*, COUNT(pl.id) AS num_likes ' +
-                  'FROM posts p ' +
-                  'LEFT JOIN post_likes pl ON p.id = pl.post_id ' +
-                  'WHERE p.is_public = true ' +
-                  'GROUP BY p.id';
+    const query = 'SELECT p.*, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = true GROUP BY p.id';
 
     db.query(query, (err, result) => {
       if (err) {
