@@ -33,7 +33,7 @@ router.get('/search/:search_term', async (req, res) => {
         const result = await db.query(`
             SELECT * FROM users WHERE username LIKE ? OR name LIKE ?
             UNION
-            SELECT * FROM communities WHERE name LIKE ?
+            SELECT * FROM community WHERE name LIKE ?
             UNION
             SELECT * FROM posts WHERE content LIKE ?
         `, [`%${search_term}%`, `%${search_term}%`, `%${search_term}%`, `%${search_term}%`]);
