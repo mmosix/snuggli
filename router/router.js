@@ -66,7 +66,13 @@ router.get('/search/:search_term', async (req, res) => {
         });
 
         // Send the response
-       // res.json(response);
+
+      return res.send({ 
+        error: false, 
+        data: response, 
+        message: 'Search data' 
+    });
+    
     } catch (error) {
         console.error('Error searching:', error);
         res.status(500).json({ error: 'Internal Server Error' });
