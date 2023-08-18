@@ -36,6 +36,13 @@ router.get('/search/:search_term', async (req, res) => {
             SELECT * FROM community WHERE name LIKE ?
             UNION
             SELECT * FROM posts WHERE content LIKE ?
+            
+    (SELECT 'user' AS type, username AS result FROM users WHERE username LIKE ?)
+    UNION
+    (SELECT 'community' AS type, name AS result FROM communities WHERE name LIKE ?)
+    UNION
+    (SELECT 'post' AS type, content AS result FROM posts WHERE content LIKE ?)
+  
         `, [`%${search_term}%`, `%${search_term}%`, `%${search_term}%`, `%${search_term}%`]);
 
         // Process the result and create a response object

@@ -207,7 +207,16 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
 
   // Handle Post Likes
   router.post('/like', (req, res) => {
-    const { userId, postId } = req.body;
+
+        //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+    const userId = authorizedData.id;
+    const { postId } = req.body;
   
     const query = 'INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)';
     db.query(query, [userId, postId], (err, result) => {
@@ -223,45 +232,72 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
         });
       }
     });
+
+        }
+    })
   });
   
 // Handle Submitting Comments
 router.post('/comment', (req, res) => {
-    const { userId, postId, content } = req.body;
-  
-    const query = 'INSERT INTO comments (user_id, post_id, content) VALUES (?, ?, ?)';
-    db.query(query, [userId, postId, content], (err, result) => {
-      if (err) {
-        console.error('Error submitting comment:', err);
-        res.status(500).send('Error submitting comment');
-      } else {
-        return res.send({ 
-            error: false, 
-            data: null, 
-            message: 'Comment submitted successfully' 
-        });
-      }
+
+    //verify the JWT token generated for the therapist
+jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+    if(err){
+        //If error send 
+    res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+    } else {
+        //If token is successfully verified, we can send the autorized data 
+const userId = authorizedData.id;
+const { postId, content } = req.body;
+
+const query = 'INSERT INTO comments (user_id, post_id, content) VALUES (?, ?, ?)';
+db.query(query, [userId, postId, content], (err, result) => {
+  if (err) {
+    console.error('Error submitting comment:', err);
+    res.status(500).send('Error submitting comment');
+  } else {
+    return res.send({ 
+        error: false, 
+        data: null, 
+        message: 'Comment submitted successfully' 
     });
+  }
+});
+
+    }
+})
   });
   
   // Handle Comment Likes
   router.post('/like-comment', (req, res) => {
-    const { userId, commentId } = req.body;
-  
-    const query = 'INSERT INTO comment_likes (user_id, comment_id) VALUES (?, ?)';
-    db.query(query, [userId, commentId], (err, result) => {
-      if (err) {
-        console.error('Error liking comment:', err);
-        res.status(500).send('Error liking comment');
-      } else {
-        console.log('Comment liked successfully');
-        return res.send({ 
-            error: false, 
-            data: null, 
-            message: 'Comment liked successfully' 
-        });
-      }
+
+    //verify the JWT token generated for the therapist
+jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+    if(err){
+        //If error send 
+    res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+    } else {
+        //If token is successfully verified, we can send the autorized data 
+const userId = authorizedData.id;
+const { commentId } = req.body;
+
+const query = 'INSERT INTO comment_likes (user_id, comment_id) VALUES (?, ?)';
+db.query(query, [userId, commentId], (err, result) => {
+  if (err) {
+    console.error('Error liking comment:', err);
+    res.status(500).send('Error liking comment');
+  } else {
+    console.log('Comment liked successfully');
+    return res.send({ 
+        error: false, 
+        data: null, 
+        message: 'Comment liked successfully' 
     });
+  }
+});
+
+    }
+})
   });
   
   // Retrieve Post Details
