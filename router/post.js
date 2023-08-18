@@ -123,26 +123,27 @@ router.post('/create-group', verifyToken, (req, res) => {
           db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
             if (err) {
               console.error('Error submitting post:', err);
-              return res.status(500).json({ error: 'An error occurred while submitting the post' });
+              return res.status(500).json({ error: 'An error occurred while submitting the post: '+ err });
             }
   
             const postId = result.insertId;
   
-            if (isPublic === 0 && groupId) {
+            if (!isPublic && groupId) {
               const insertGroupPostQuery =
                 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
               db.query(insertGroupPostQuery, [groupId, postId], (err) => {
                 if (err) {
                   console.error('Error submitting group post:', err);
-                  return res.status(500).json({ error: 'An error occurred while submitting the group post' });
+                  return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
+                } else {
+                    return res.send({
+                      error: false,
+                      data: null,
+                      message: 'Post submitted successfully'
+                    });
                 }
   
-                return res.send({
-                  error: false,
-                  data: null,
-                  message: 'Post submitted successfully'
-                });
               });
             } else {
               return res.send({
@@ -159,25 +160,25 @@ router.post('/create-group', verifyToken, (req, res) => {
         db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
           if (err) {
             console.error('Error submitting post:', err);
-            return res.status(500).json({ error: 'An error occurred while submitting the post' });
+            return res.status(500).json({ error: 'An error occurred while submitting the post: '+ err});
           }
   
           const postId = result.insertId;
   
-          if (isPublic === 0 && groupId) {
+          if (!isPublic && groupId) {
             const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
             db.query(insertGroupPostQuery, [groupId, postId], (err) => {
               if (err) {
                 console.error('Error submitting group post:', err);
-                return res.status(500).json({ error: 'An error occurred while submitting the group post' });
-              }
-  
-              return res.send({
-                error: false,
-                data: null,
-                message: 'Post submitted successfully'
-              });
+                return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
+              } else {
+                return res.send({
+                  error: false,
+                  data: null,
+                  message: 'Post submitted successfully'
+                });
+            }
             });
           } else {
             return res.send({
