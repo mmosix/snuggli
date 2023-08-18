@@ -109,7 +109,7 @@ router.post('/create-group', verifyToken, (req, res) => {
       const userId = authorizedData.id;
   
       if (req.file) {
-        cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'auto', folder: 'app/post'  }, (error, result) => {
           if (error) {
             console.error('Error uploading image to Cloudinary:', error);
             return res.status(500).json({ error: 'An error occurred while uploading the image' });
