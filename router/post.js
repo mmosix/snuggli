@@ -206,7 +206,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
   });
 
   // Handle Post Likes
-  router.post('/like', (req, res) => {
+  router.post('/like', verifyToken, (req, res) => {
 
         //verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
@@ -238,7 +238,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
   });
   
 // Handle Submitting Comments
-router.post('/comment', (req, res) => {
+router.post('/comment', verifyToken, (req, res) => {
 
     //verify the JWT token generated for the therapist
 jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
@@ -269,7 +269,7 @@ db.query(query, [userId, postId, content], (err, result) => {
   });
   
   // Handle Comment Likes
-  router.post('/like-comment', (req, res) => {
+  router.post('/like-comment', verifyToken, (req, res) => {
 
     //verify the JWT token generated for the therapist
 jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
@@ -301,7 +301,7 @@ db.query(query, [userId, commentId], (err, result) => {
   });
   
   // Retrieve Post Details
-  router.get('/:postId/details', (req, res) => {
+  router.get('/:postId/details', verifyToken, (req, res) => {
     const postId = req.params.postId;
   
     const query = 'SELECT p.*, u.username, COUNT(pl.id) AS num_likes ' +
