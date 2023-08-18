@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2; // Cloudinary SDK
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const  { conn, db } = require('../database');
 
 const jsonwebtoken = require('jsonwebtoken');
@@ -18,17 +17,7 @@ const privateKey = 'MIICXQIBAAKBgH1B4lvSKZkNElOfkhmAUTmFj+f5/N5d5gxF/DUJ/ZyAO8W6
 
 
 // Set up multer for file uploads with Cloudinary
-// const storage = multer.memoryStorage(); // Store uploaded files in memory
-
-// Middleware for handling file uploads with Cloudinary
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: 'app/post',
-      format: async (req, file) => 'png', // Change to desired file format
-      public_id: (req, file) => `post_${Date.now()}_${file.originalname}`
-    }
-  });
+const storage = multer.memoryStorage(); // Store uploaded files in memory
 
 const upload = multer({ storage: storage });
   
@@ -59,118 +48,147 @@ const verifyToken = (req, res, next)=>{
     //     }
     // })
 
+
 // Define a route to create a new group
 router.post('/create-group', verifyToken, (req, res) => {
- 
-    //verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
-        if(err){
-            //If error send 
-        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
-        } else {
-            //If token is successfully verified, we can send the autorized data 
-
-    const { groupName, users } = req.body;
-    const userId = authorizedData.id;
-  
-    // Insert group into groups table
-    const insertGroupQuery = 'INSERT INTO groups (name, created_by) VALUES (?, ?)';
-    db.query(insertGroupQuery, [groupName, userId], (err, result) => {
       if (err) {
-        console.error('Error creating group:', err);
-        res.status(500).json({ error: 'An error occurred while creating the group' });
-      } else {
+        return res.status(422).send({ error: true, message: 'Please provide authorization token' });
+      }
+  
+      const { groupName, users } = req.body;
+      const userId = authorizedData.id;
+  
+      const insertGroupQuery = 'INSERT INTO groups (name, created_by) VALUES (?, ?)';
+      db.query(insertGroupQuery, [groupName, userId], (err, result) => {
+        if (err) {
+          console.error('Error creating group:', err);
+          return res.status(500).json({ error: 'An error occurred while creating the group' });
+        }
+  
         const groupId = result.insertId;
+  
         if (users && users.length > 0) {
-          // Insert group members into group_users table
           const insertGroupMembersQuery = 'INSERT INTO group_users (group_id, user_id) VALUES ?';
-          const values = users.map(user_id => [groupId, user_id]);
+          const values = users.map((user_id) => [groupId, user_id]);
+  
           db.query(insertGroupMembersQuery, [values], (err) => {
             if (err) {
               console.error('Error adding group members:', err);
-              res.status(500).send({ 
-                error: true,  
-                message: 'An error occurred while adding group members' 
-            });
-              return;
+              return res.status(500).send({
+                error: true,
+                message: 'An error occurred while adding group members'
+              });
             }
-            return res.send({ 
-                error: false, 
-                data: null, 
-                message: 'Group created successfully' 
+  
+            return res.send({
+              error: false,
+              data: null,
+              message: 'Group created successfully'
             });
-
           });
         } else {
-            return res.send({ 
-                error: false, 
-                data: null, 
-                message: 'Group created successfully' 
-            });
+          return res.send({
+            error: false,
+            data: null,
+            message: 'Group created successfully'
+          });
         }
+      });
+    });
+  });
+  
+  // Define a route to submit a new post with image upload to Cloudinary
+  router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+      if (err) {
+        return res.status(422).send({ error: true, message: 'Please provide authorization token' });
+      }
+  
+      const { content, isPublic, groupId } = req.body;
+      const userId = authorizedData.id;
+  
+      if (req.file) {
+        cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+          if (error) {
+            console.error('Error uploading image to Cloudinary:', error);
+            return res.status(500).json({ error: 'An error occurred while uploading the image' });
+          }
+  
+          const imageUrl = result.secure_url;
+  
+          const insertPostQuery =
+            'INSERT INTO posts (user_id, content, is_public, image_url) VALUES (?, ?, ?, ?)';
+  
+          db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
+            if (err) {
+              console.error('Error submitting post:', err);
+              return res.status(500).json({ error: 'An error occurred while submitting the post' });
+            }
+  
+            const postId = result.insertId;
+  
+            if (!isPublic && groupId) {
+              const insertGroupPostQuery =
+                'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
+  
+              db.query(insertGroupPostQuery, [groupId, postId], (err) => {
+                if (err) {
+                  console.error('Error submitting group post:', err);
+                  return res.status(500).json({ error: 'An error occurred while submitting the group post' });
+                }
+  
+                return res.send({
+                  error: false,
+                  data: null,
+                  message: 'Post submitted successfully'
+                });
+              });
+            } else {
+              return res.send({
+                error: false,
+                data: null,
+                message: 'Post submitted successfully'
+              });
+            }
+          });
+        }).end(req.file.buffer);
+      } else {
+        const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)';
+  
+        db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
+          if (err) {
+            console.error('Error submitting post:', err);
+            return res.status(500).json({ error: 'An error occurred while submitting the post' });
+          }
+  
+          const postId = result.insertId;
+  
+          if (!isPublic && groupId) {
+            const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
+  
+            db.query(insertGroupPostQuery, [groupId, postId], (err) => {
+              if (err) {
+                console.error('Error submitting group post:', err);
+                return res.status(500).json({ error: 'An error occurred while submitting the group post' });
+              }
+  
+              return res.send({
+                error: false,
+                data: null,
+                message: 'Post submitted successfully'
+              });
+            });
+          } else {
+            return res.send({
+              error: false,
+              data: null,
+              message: 'Post submitted successfully'
+            });
+          }
+        });
       }
     });
-
-        }
-    })
-  }); 
-
-// Define a route to submit a new post with image upload to Cloudinary
-router.post('/submit', upload.single('postImage'), verifyToken, (req, res) => {
-    //verify the JWT token generated for the therapist
-    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
-        if(err){
-            //If error send 
-        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
-        } else {
-    //If token is successfully verified, we can send the autorized data 
-
-    const { content, isPublic, groupId } = req.body;
-    const userId = authorizedData.id;
-    
-  let imageUrl = null;
-
-  if (req.file) {
-    imageUrl = req.file.secure_url;
-  }
-  
-  // Insert post into posts table with Cloudinary image URL
-  const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url) VALUES (?, ?, ?, ?)';
-  db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
-    if (err) {
-      console.error('Error submitting post:', err);
-      res.status(500).json({ error: 'An error occurred while submitting the post' });
-    } else {
-      const postId = result.insertId;
-
-      if (!isPublic && groupId) {
-        // Insert private post for a group
-        const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
-        db.query(insertGroupPostQuery, [groupId, postId], (err) => {
-          if (err) {
-            console.error('Error submitting group post:', err);
-            res.status(500).json({ error: 'An error occurred while submitting the group post' });
-            return;
-          }
-          return res.send({ 
-              error: false, 
-              data: null, 
-              message: 'Post submitted successfully' 
-          });
-
-        });
-      } else {
-        return res.send({ 
-            error: false, 
-            data: null, 
-            message: 'Post submitted successfully' 
-        });
-
-      }
-    }
-  });
-        }
-    })
   });
 
   // Handle Post Likes
