@@ -127,6 +127,10 @@ router.post('/create-group', verifyToken, (req, res) => {
             }
   
             const postId = result.insertId;
+
+            console.log('isPublic:', isPublic);
+            console.log('groupId:', groupId);
+            console.log('postId:', postId);
   
             if (!isPublic && groupId) {
               const insertGroupPostQuery =
@@ -137,6 +141,7 @@ router.post('/create-group', verifyToken, (req, res) => {
                   console.error('Error submitting group post:', err);
                   return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
                 } else {
+                    console.log('Group post inserted successfully');
                     return res.send({
                       error: false,
                       data: null,
@@ -146,6 +151,7 @@ router.post('/create-group', verifyToken, (req, res) => {
   
               });
             } else {
+                console.log('Skipping group post insertion');
               return res.send({
                 error: false,
                 data: null,
