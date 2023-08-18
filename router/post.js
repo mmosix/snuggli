@@ -132,7 +132,7 @@ router.post('/create-group', verifyToken, (req, res) => {
             console.log('groupId:', groupId);
             console.log('postId:', postId);
   
-            if (!isPublic && groupId) {
+            if (!isPublic) {
               const insertGroupPostQuery =
                 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
@@ -171,7 +171,7 @@ router.post('/create-group', verifyToken, (req, res) => {
   
           const postId = result.insertId;
   
-          if (!isPublic && groupId) {
+          if (!isPublic) {
             const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
             db.query(insertGroupPostQuery, [groupId, postId], (err) => {
