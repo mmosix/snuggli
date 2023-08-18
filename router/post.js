@@ -2,22 +2,34 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2; // Cloudinary SDK
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const  { conn, db } = require('../database');
 
 const jsonwebtoken = require('jsonwebtoken');
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: 'your_cloud_name',
-    api_key: 'your_api_key',
-    api_secret: 'your_api_secret'
+    cloud_name: 'snuggli',
+    api_key: '672171861559948',
+    api_secret: 'p_k-kFQr4cGZ12TOfOBHeX2sOUA'
   });
 
 const privateKey = 'MIICXQIBAAKBgH1B4lvSKZkNElOfkhmAUTmFj+f5/N5d5gxF/DUJ/ZyAO8W6bBUNSj0RHnLYy0FpH3L4Erlt5IxG6rpGQm5cZiIfZ6pbpnY388uxvI4iTTIiVKDuKYnD4CgQ6et7vcwvMzQk56Cy+6wllAqQhnSjwbHV8lM1Yt3jVyYz6jz92y4xAgMBAAECgYBJiQNmGqTXOKhYtaalGAMXfQT2EHpW5dNnwzKExN/CIDp3I7HOTiYWYdV5YTM6rIeNDHyZph12CTBGuXbIqbA/XlCOqPPMjS7vm9DFyeNgvS1hAtcsM0cH/AR4o0rkH9Xu3+sw1vn0llhWJWddpDrS4fbkJvaLstmqPraT6dvBTQJBAPHksbbTaIBplSY6dezrkgf05Cuf7/j0FLWUAYUUJPia1s6Vr9To6Joa55ryOTe7n50YVzq2d4YHnvKz5w4dxX8CQQCEj+SSrvell3mn0Sf3d8O/7FW2iiqBy/n/0xrjuQwIEM+wK7rjJ2M5BPnXQa79ugeelSRMCot7W0M0NYfisRPAkEAv1LfrXexZEAelEoRE/+PVXPBNTAfoo2MA8K5IQU56Nivpl6G4KQHtjwpjEiiMQ7ZxGuIMww3pW9JrTXWPzgVCQJBAIKYD6LCZI7qL5u4Xhqh9b8jVsUQYnY5TyBRSR0ZEsKIEm135i7K8yDXcK70i7Ca630taiBc6zXY919VqBhoY2LdVe4f6xHRuRk4wpccEymnKx5ghmBwUk8SmAhlx84giedsLjehBatbFhkId0lSv+qe82El';
 
 
 // Set up multer for file uploads with Cloudinary
-const storage = multer.memoryStorage(); // Store uploaded files in memory
+// const storage = multer.memoryStorage(); // Store uploaded files in memory
+
+// Middleware for handling file uploads with Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'app/post',
+      format: async (req, file) => 'png', // Change to desired file format
+      public_id: (req, file) => `post_${Date.now()}_${file.originalname}`
+    }
+  });
+
 const upload = multer({ storage: storage });
   
 //  Verify Token
@@ -104,7 +116,7 @@ router.post('/create-group', verifyToken, (req, res) => {
   }); 
 
 // Define a route to submit a new post with image upload to Cloudinary
-router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
+router.post('/submit', upload.single('postImage'), verifyToken, (req, res) => {
     //verify the JWT token generated for the therapist
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if(err){
@@ -115,92 +127,48 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
 
     const { content, isPublic, groupId } = req.body;
     const userId = authorizedData.id;
-  
-    if (req.file) {
-      // Upload image to Cloudinary
-      cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
-        if (error) {
-          console.error('Error uploading image to Cloudinary:', error);
-          res.status(500).json({ error: 'An error occurred while uploading the image' });
-        } else {
-          const imageUrl = result.secure_url;
-  
-          // Insert post into posts table with Cloudinary image URL
-          const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url) VALUES (?, ?, ?, ?)';
-          db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
-            if (err) {
-              console.error('Error submitting post:', err);
-              res.status(500).json({ error: 'An error occurred while submitting the post' });
-            } else {
-              const postId = result.insertId;
-  
-              if (!isPublic && groupId) {
-                // Insert private post for a group
-                const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
-                db.query(insertGroupPostQuery, [groupId, postId], (err) => {
-                  if (err) {
-                    console.error('Error submitting group post:', err);
-                    res.status(500).json({ error: 'An error occurred while submitting the group post' });
-                    return;
-                  }
-                  return res.send({ 
-                      error: false, 
-                      data: null, 
-                      message: 'Post submitted successfully' 
-                  });
+    
+  let imageUrl = null;
 
-                });
-              } else {
-                return res.send({ 
-                    error: false, 
-                    data: null, 
-                    message: 'Post submitted successfully' 
-                });
-
-              }
-            }
-          });
-        }
-      }).end(req.file.buffer);
+  if (req.file) {
+    imageUrl = req.file.secure_url;
+  }
+  
+  // Insert post into posts table with Cloudinary image URL
+  const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url) VALUES (?, ?, ?, ?)';
+  db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
+    if (err) {
+      console.error('Error submitting post:', err);
+      res.status(500).json({ error: 'An error occurred while submitting the post' });
     } else {
-      // No image uploaded
-      // Insert post into posts table without image URL
-      const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)';
-      db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
-        if (err) {
-          console.error('Error submitting post:', err);
-          res.status(500).json({ error: 'An error occurred while submitting the post' });
-        } else {
-          const postId = result.insertId;
-  
-          if (!isPublic && groupId) {
-            // Insert private post for a group
-            const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
-            db.query(insertGroupPostQuery, [groupId, postId], (err) => {
-              if (err) {
-                console.error('Error submitting group post:', err);
-                res.status(500).json({ error: 'An error occurred while submitting the group post' });
-                return;
-              }
-              return res.send({ 
-                  error: false, 
-                  data: null, 
-                  message: 'Post submitted successfully' 
-              });
+      const postId = result.insertId;
 
-            });
-          } else {
-            return res.send({ 
-                error: false, 
-                data: null, 
-                message: 'Post submitted successfully' 
-            });
-
+      if (!isPublic && groupId) {
+        // Insert private post for a group
+        const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
+        db.query(insertGroupPostQuery, [groupId, postId], (err) => {
+          if (err) {
+            console.error('Error submitting group post:', err);
+            res.status(500).json({ error: 'An error occurred while submitting the group post' });
+            return;
           }
-        }
-      });
-    }
+          return res.send({ 
+              error: false, 
+              data: null, 
+              message: 'Post submitted successfully' 
+          });
 
+        });
+      } else {
+        return res.send({ 
+            error: false, 
+            data: null, 
+            message: 'Post submitted successfully' 
+        });
+
+      }
+    }
+  });
         }
     })
   });
