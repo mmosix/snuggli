@@ -132,14 +132,7 @@ router.post('/create-group', verifyToken, (req, res) => {
             console.log('groupId:', groupId);
             console.log('postId:', postId);
   
-            if (!isPublic) {
-                console.log('Skipping group post insertion');
-              return res.send({
-                error: false,
-                data: null,
-                message: 'Post submitted successfully'
-              });
-            } else {
+            if (isPublic !== 0) {
                 const insertGroupPostQuery =
                   'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
     
@@ -157,6 +150,13 @@ router.post('/create-group', verifyToken, (req, res) => {
                   }
     
                 });
+            } else {
+                console.log('Skipping group post insertion');
+              return res.send({
+                error: false,
+                data: null,
+                message: 'Post submitted successfully'
+              });
             }
           });
         }).end(req.file.buffer);
@@ -171,27 +171,30 @@ router.post('/create-group', verifyToken, (req, res) => {
   
           const postId = result.insertId;
   
-          if (!isPublic) {
-            console.log('Skipping group post insertion');
-          return res.send({
-            error: false,
-            data: null,
-            message: 'Post submitted successfully'
-          });
-          } else {
-            const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
+          if (isPublic !== 0) {
+              const insertGroupPostQuery =
+                'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
-            db.query(insertGroupPostQuery, [groupId, postId], (err) => {
-              if (err) {
-                console.error('Error submitting group post:', err);
-                return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
-              } else {
-                return res.send({
-                  error: false,
-                  data: null,
-                  message: 'Post submitted successfully'
-                });
-            }
+              db.query(insertGroupPostQuery, [groupId, postId], (err) => {
+                if (err) {
+                  console.error('Error submitting group post:', err);
+                  return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
+                } else {
+                    console.log('Group post inserted successfully');
+                    return res.send({
+                      error: false,
+                      data: null,
+                      message: 'Post submitted successfully'
+                    });
+                }
+  
+              });
+          } else {
+              console.log('Skipping group post insertion');
+            return res.send({
+              error: false,
+              data: null,
+              message: 'Post submitted successfully'
             });
           }
         });
