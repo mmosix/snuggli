@@ -132,31 +132,31 @@ router.post('/create-group', verifyToken, (req, res) => {
             console.log('groupId:', groupId);
             console.log('postId:', postId);
   
-            if (!isPublic) {
-              const insertGroupPostQuery =
-                'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
-  
-              db.query(insertGroupPostQuery, [groupId, postId], (err) => {
-                if (err) {
-                  console.error('Error submitting group post:', err);
-                  return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
-                } else {
-                    console.log('Group post inserted successfully');
-                    return res.send({
-                      error: false,
-                      data: null,
-                      message: 'Post submitted successfully'
-                    });
-                }
-  
-              });
-            } else {
+            if (isPublic) {
                 console.log('Skipping group post insertion');
               return res.send({
                 error: false,
                 data: null,
                 message: 'Post submitted successfully'
               });
+            } else {
+                const insertGroupPostQuery =
+                  'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
+    
+                db.query(insertGroupPostQuery, [groupId, postId], (err) => {
+                  if (err) {
+                    console.error('Error submitting group post:', err);
+                    return res.status(500).json({ error: 'An error occurred while submitting the group post: '+ err });
+                  } else {
+                      console.log('Group post inserted successfully');
+                      return res.send({
+                        error: false,
+                        data: null,
+                        message: 'Post submitted successfully'
+                      });
+                  }
+    
+                });
             }
           });
         }).end(req.file.buffer);
