@@ -132,7 +132,7 @@ router.post('/create-group', verifyToken, (req, res) => {
             console.log('groupId:', groupId);
             console.log('postId:', postId);
   
-            if (isPublic) {
+            if (!isPublic) {
                 console.log('Skipping group post insertion');
               return res.send({
                 error: false,
