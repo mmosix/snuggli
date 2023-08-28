@@ -172,6 +172,13 @@ router.post('/create-group', verifyToken, (req, res) => {
           const postId = result.insertId;
   
           if (!isPublic) {
+            console.log('Skipping group post insertion');
+          return res.send({
+            error: false,
+            data: null,
+            message: 'Post submitted successfully'
+          });
+          } else {
             const insertGroupPostQuery = 'INSERT INTO group_posts (group_id, post_id) VALUES (?, ?)';
   
             db.query(insertGroupPostQuery, [groupId, postId], (err) => {
@@ -185,12 +192,6 @@ router.post('/create-group', verifyToken, (req, res) => {
                   message: 'Post submitted successfully'
                 });
             }
-            });
-          } else {
-            return res.send({
-              error: false,
-              data: null,
-              message: 'Post submitted successfully'
             });
           }
         });
