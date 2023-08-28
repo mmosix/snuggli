@@ -145,7 +145,7 @@ router.post('/create-group', verifyToken, (req, res) => {
                       return res.send({
                         error: false,
                         data: null,
-                        message: 'Post submitted successfully'
+                        message: 'Private Post submitted successfully'
                       });
                   }
     
@@ -155,7 +155,7 @@ router.post('/create-group', verifyToken, (req, res) => {
               return res.send({
                 error: false,
                 data: null,
-                message: 'Post submitted successfully'
+                message: 'Public Post submitted successfully'
               });
             }
           });
@@ -184,7 +184,7 @@ router.post('/create-group', verifyToken, (req, res) => {
                     return res.send({
                       error: false,
                       data: null,
-                      message: 'Post submitted successfully'
+                      message: 'Private Post submitted successfully'
                     });
                 }
   
@@ -194,7 +194,7 @@ router.post('/create-group', verifyToken, (req, res) => {
             return res.send({
               error: false,
               data: null,
-              message: 'Post submitted successfully'
+              message: 'Public Post submitted successfully'
             });
           }
         });
