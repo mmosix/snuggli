@@ -39,6 +39,8 @@ router.get('/search/:search_term', async (req, res) => {
         // Execute the SQL query with placeholders
         const result = await db.query(query, [search_term, search_term, search_term]);
 
+        console.log(result); // Add this line to inspect the value of 'result'
+
         // Process the result and create a response object
         const response = result.map(row => {
             if (row.type === 'user') {
