@@ -485,7 +485,7 @@ db.query(query, [userId, commentId], (err, result) => {
                 return res.send({ 
                     error: false, 
                     data: results, 
-                    message: 'private post data' 
+                    message: 'post comment data' 
                 });
             });
             
