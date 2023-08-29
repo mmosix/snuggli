@@ -200,11 +200,11 @@ const connectLocal = {
     return new Promise((resolve, reject)=>{
 
         const query = `
-            SELECT 'user' AS type, id, username FROM users WHERE username LIKE ?
+            SELECT 'user' AS type, id, username AS show FROM users WHERE username LIKE ?
             UNION
-            SELECT 'community' AS type, id, name FROM community WHERE name LIKE ?
+            SELECT 'community' AS type, id, name AS show FROM community WHERE name LIKE ?
             UNION
-            SELECT 'post' AS type, id, content FROM posts WHERE content LIKE ?
+            SELECT 'post' AS type, id, content AS show FROM posts WHERE content LIKE ?
         `;
 
         pool.query(query, [search_term, search_term, search_term], (error, result)=>{
