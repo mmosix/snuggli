@@ -29,7 +29,7 @@ router.get('/search/:search_term', async (req, res) => {
 
     try {
         const query = `
-            SELECT 'user' AS type, id, username, name FROM users WHERE username LIKE ?
+            SELECT 'user' AS type, id, username FROM users WHERE username LIKE ?
             UNION
             SELECT 'community' AS type, id, name FROM community WHERE name LIKE ?
             UNION
@@ -45,8 +45,7 @@ router.get('/search/:search_term', async (req, res) => {
                 return {
                     type: 'user',
                     id: row.id,
-                    username: row.username,
-                    name: row.name
+                    username: row.username
                     // You can add more user-related attributes here
                 };
             } else if (row.type === 'community') {
