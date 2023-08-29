@@ -24,24 +24,24 @@ router.get('/', function (req, res) {
     return res.send({ error: true, message: 'Hello, this is Snuggli' })
 });
 
-
 router.get('/search/:search_term', async (req, res) => {
-    const search_term = req.params.search_term;
+    const search_term = `%${req.params.search_term}%`; // Add wildcards to the search term
 
     try {
-        // Execute the SQL query
-        const result = await db.query(`       
-    (SELECT 'user' AS type, username AS result FROM users WHERE username LIKE ?)
-    UNION
-    (SELECT 'community' AS type, name AS result FROM community WHERE name LIKE ?)
-    UNION
-    (SELECT 'post' AS type, content AS result FROM posts WHERE content LIKE ?)
-  
-        `, [`%${search_term}%`, `%${search_term}%`, `%${search_term}%`, `%${search_term}%`]);
+        const query = `
+            SELECT 'user' AS type, id, username, name FROM users WHERE username LIKE ?
+            UNION
+            SELECT 'community' AS type, community_id AS id, name FROM community WHERE name LIKE ?
+            UNION
+            SELECT 'post' AS type, id, content FROM posts WHERE content LIKE ?
+        `;
+
+        // Execute the SQL query with placeholders
+        const result = await db.query(query, [search_term, search_term, search_term]);
 
         // Process the result and create a response object
         const response = result.map(row => {
-            if ('username' in row) {
+            if (row.type === 'user') {
                 return {
                     type: 'user',
                     id: row.id,
@@ -49,14 +49,14 @@ router.get('/search/:search_term', async (req, res) => {
                     name: row.name
                     // You can add more user-related attributes here
                 };
-            } else if ('community_id' in row) {
+            } else if (row.type === 'community') {
                 return {
                     type: 'community',
-                    id: row.community_id,
+                    id: row.id,
                     name: row.name
                     // You can add more community-related attributes here
                 };
-            } else if ('content' in row) {
+            } else if (row.type === 'post') {
                 return {
                     type: 'post',
                     id: row.id,
@@ -67,12 +67,11 @@ router.get('/search/:search_term', async (req, res) => {
         });
 
         // Send the response
-
-      return res.send({ 
-        error: false, 
-        data: response, 
-        message: 'Search data' 
-    });
+        return res.send({ 
+            error: false, 
+            data: response, 
+            message: 'Search data' 
+        });
     
     } catch (error) {
         console.error('Error searching:', error);
