@@ -40,21 +40,21 @@ router.get('/search/:search_term', async (req, res) => {
                 return {
                     type: 'user',
                     id: row.id,
-                    display: row.show
+                    display: row.display
                     // You can add more user-related attributes here
                 };
             } else if (row.type === 'community') {
                 return {
                     type: 'community',
                     id: row.id,
-                    display: row.show
+                    display: row.display
                     // You can add more community-related attributes here
                 };
             } else if (row.type === 'post') {
                 return {
                     type: 'post',
                     id: row.id,
-                    display: row.show
+                    display: row.display
                     // You can add more post-related attributes here
                 };
             }
