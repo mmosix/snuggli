@@ -340,7 +340,7 @@ db.query(query, [userId, commentId], (err, result) => {
             const userId = authorizedData.id;
 
             
-    const query = "SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = 0 GROUP BY p.id, p.content";
+    const query = "SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image, p.is_public, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = 0 GROUP BY p.id, p.content";
   
     db.query(query, function (error, results) {
         if (error) throw error;
@@ -383,7 +383,7 @@ db.query(query, [userId, commentId], (err, result) => {
           GROUP BY p.id, p.content, p.is_public, gp.group_id
           `;
           
-            db.query(query, [userId], function (error, results) {
+            db.query(query, [userId, userId], function (error, results) {
                 if (error) throw error;
                 return res.send({ 
                     error: false, 
