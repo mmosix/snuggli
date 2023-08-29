@@ -191,6 +191,31 @@ const connectLocal = {
          });
      });
  };
+
+ 
+     
+   // ***Get single user data by ID ***
+       
+   conn.searchData = (search_term) =>{
+    return new Promise((resolve, reject)=>{
+
+        const query = `
+            SELECT 'user' AS type, id, username FROM users WHERE username LIKE ?
+            UNION
+            SELECT 'community' AS type, id, name FROM community WHERE name LIKE ?
+            UNION
+            SELECT 'post' AS type, id, content FROM posts WHERE content LIKE ?
+        `;
+
+        pool.query(query, [search_term, search_term, search_term], (error, result)=>{
+            if(error){
+                return reject(error);
+            }
+            return resolve(result);
+             
+        });
+    });
+};
       
 
    module.exports = { conn, db };

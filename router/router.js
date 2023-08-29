@@ -28,16 +28,9 @@ router.get('/search/:search_term', async (req, res) => {
     const search_term = `%${req.params.search_term}%`; // Add wildcards to the search term
 
     try {
-        const query = `
-            SELECT 'user' AS type, id, username FROM users WHERE username LIKE ?
-            UNION
-            SELECT 'community' AS type, id, name FROM community WHERE name LIKE ?
-            UNION
-            SELECT 'post' AS type, id, content FROM posts WHERE content LIKE ?
-        `;
 
         // Execute the SQL query with placeholders
-        const result = await db.query(query, [search_term, search_term, search_term]);
+        const result = await conn.searchData(search_term);
 
         console.log(result); // Add this line to inspect the value of 'result'
 
