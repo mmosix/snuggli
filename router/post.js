@@ -338,65 +338,23 @@ db.query(query, [userId, commentId], (err, result) => {
             //If token is successfully verified, we can send the autorized data 
 
             const userId = authorizedData.id;
+
             
-            
-  const query = `
-  SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
-    COUNT(pl.id) AS num_likes,
-    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
-  FROM posts p
-  LEFT JOIN post_likes pl ON p.id = pl.post_id
-  LEFT JOIN comments c ON p.id = c.post_id
-  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
-  WHERE p.is_public = 1
-  GROUP BY p.id, c.id
-  ORDER BY p.id, c.id
-    `;
-
-    
-  db.query(query, (err, result) => {
-    if (err) {
-      console.error('Error retrieving public posts:', err);
-      res.status(500).send('Error retrieving public posts');
-    } else {
-      const postsWithComments = [];
-      let currentPost = null;
-
-      for (const row of result) {
-        if (!currentPost || currentPost.post_id !== row.post_id) {
-          currentPost = {
-            post_id: row.post_id,
-            post_content: row.post_content,
-            post_image: row.post_image,
-            num_likes: row.num_likes,
-            comments: []
-          };
-          postsWithComments.push(currentPost);
-        }
-
-        if (row.comment_id) {
-          const comment = {
-            comment_id: row.comment_id,
-            comment_content: row.comment_content,
-            num_comment_likes: row.num_comment_likes
-          };
-          currentPost.comments.push(comment);
-        }
-      }
-
-      return res.send({ 
-          error: false, 
-          data: postsWithComments, 
-          message: 'public post data' 
-      });
-    }
-  });
-
+    const query = "SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = 0 GROUP BY p.id, p.content";
+  
+    db.query(query, function (error, results) {
+        if (error) throw error;
+        return res.send({ 
+            error: false, 
+            data: results, 
+            message: 'public post data' 
+        });
+    });
+          
         }
     })
 
   });
-
 
   // Retrieve private Post
   router.get('/private', verifyToken, (req, res) => {
@@ -410,69 +368,129 @@ db.query(query, [userId, commentId], (err, result) => {
             //If token is successfully verified, we can send the autorized data 
 
             const userId = authorizedData.id;
+
+            const query = `SELECT
+            p.id AS post_id,
+            p.content AS post_content,
+            p.is_public,
+            gp.group_id,
+            COUNT(pl.id) AS num_likes
+          FROM posts p
+          LEFT JOIN group_posts gp ON p.id = gp.post_id
+          LEFT JOIN post_likes pl ON p.id = pl.post_id
+          WHERE p.is_public = 0
+            AND (p.user_id = ? OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = ?))
+          GROUP BY p.id, p.content, p.is_public, gp.group_id
+          `;
+          
+            db.query(query, [userId], function (error, results) {
+                if (error) throw error;
+                return res.send({ 
+                    error: false, 
+                    data: results, 
+                    message: 'private post data' 
+                });
+            });
             
             
-  const query = `
-  SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
-    COUNT(pl.id) AS num_likes,
-    c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
-  FROM posts p
-  INNER JOIN post_likes pl ON p.id = pl.post_id
-  LEFT JOIN comments c ON p.id = c.post_id
-  LEFT JOIN comment_likes cl ON c.id = cl.comment_id
-  WHERE p.is_public = 0 AND (p.id IN (
-    SELECT gp.post_id FROM group_posts gp
-    INNER JOIN user_groups ug ON gp.group_id = ug.group_id
-    WHERE ug.user_id = ?
-  ) OR p.id NOT IN (
-    SELECT gp.post_id FROM group_posts gp
-  ))
-  GROUP BY p.id, c.id
-  ORDER BY p.id, c.id
-    `;
+//   const query = `
+//   SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image,
+//     COUNT(pl.id) AS num_likes,
+//     c.id AS comment_id, c.content AS comment_content, COUNT(cl.id) AS num_comment_likes
+//   FROM posts p
+//   INNER JOIN post_likes pl ON p.id = pl.post_id
+//   LEFT JOIN comments c ON p.id = c.post_id
+//   LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+//   WHERE p.is_public = 0 AND (p.id IN (
+//     SELECT gp.post_id FROM group_posts gp
+//     INNER JOIN user_groups ug ON gp.group_id = ug.group_id
+//     WHERE ug.user_id = ?
+//   ) OR p.id NOT IN (
+//     SELECT gp.post_id FROM group_posts gp
+//   ))
+//   GROUP BY p.id, c.id
+//   ORDER BY p.id, c.id
+//     `;
     
-  db.query(query, [userId], (err, result) => {
-    if (err) {
-      console.error('Error retrieving private posts:', err);
-      res.status(500).send('Error retrieving private posts');
-    } else {
-      const postsWithComments = [];
-      let currentPost = null;
+//   db.query(query, [userId], (err, result) => {
+//     if (err) {
+//       console.error('Error retrieving private posts:', err);
+//       res.status(500).send('Error retrieving private posts');
+//     } else {
+//       const postsWithComments = [];
+//       let currentPost = null;
 
-      for (const row of result) {
-        if (!currentPost || currentPost.post_id !== row.post_id) {
-          currentPost = {
-            post_id: row.post_id,
-            post_content: row.post_content,
-            post_image: row.post_image,
-            num_likes: row.num_likes,
-            comments: []
-          };
-          postsWithComments.push(currentPost);
-        }
+//       for (const row of result) {
+//         if (!currentPost || currentPost.post_id !== row.post_id) {
+//           currentPost = {
+//             post_id: row.post_id,
+//             post_content: row.post_content,
+//             post_image: row.post_image,
+//             num_likes: row.num_likes,
+//             comments: []
+//           };
+//           postsWithComments.push(currentPost);
+//         }
 
-        if (row.comment_id) {
-          const comment = {
-            comment_id: row.comment_id,
-            comment_content: row.comment_content,
-            num_comment_likes: row.num_comment_likes
-          };
-          currentPost.comments.push(comment);
-        }
-      }
+//         if (row.comment_id) {
+//           const comment = {
+//             comment_id: row.comment_id,
+//             comment_content: row.comment_content,
+//             num_comment_likes: row.num_comment_likes
+//           };
+//           currentPost.comments.push(comment);
+//         }
+//       }
 
-      return res.send({ 
-        error: false, 
-        data: postsWithComments, 
-        message: 'Private post data' 
-    });
-    }
-  });
+//       return res.send({ 
+//         error: false, 
+//         data: postsWithComments, 
+//         message: 'Private post data' 
+//     });
+//     }
+//   });
 
         }
     })
 
   });
   
+  // Retrieve comments for Post
+  router.get('/comments/:id', verifyToken, (req, res) => {
+
+    //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+
+            const userId = authorizedData.id;
+            let post_id = req.params.id;
+
+            const query = `SELECT
+            c.id AS comment_id,
+            c.content AS comment_content,
+            COUNT(cl.id) AS num_comment_likes
+          FROM comments c
+          LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+          WHERE c.post_id = ?
+          GROUP BY c.id, c.content
+          `;
+          
+            db.query(query, [post_id], function (error, results) {
+                if (error) throw error;
+                return res.send({ 
+                    error: false, 
+                    data: results, 
+                    message: 'private post data' 
+                });
+            });
+            
+        }
+    })
+
+  });
 
 module.exports = router;
