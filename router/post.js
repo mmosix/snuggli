@@ -372,6 +372,7 @@ db.query(query, [userId, commentId], (err, result) => {
             const query = `SELECT
             p.id AS post_id,
             p.content AS post_content,
+            p.image_url AS post_image,
             p.is_public,
             gp.group_id,
             COUNT(pl.id) AS num_likes
