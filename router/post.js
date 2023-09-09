@@ -473,9 +473,13 @@ db.query(query, [userId, commentId], (err, result) => {
             const query = `SELECT
             c.id AS comment_id,
             c.content AS comment_content,
-            COUNT(cl.id) AS num_comment_likes
+            c.user_id, u.username, u.profile_photo, 
+            COUNT(cl.id) AS num_comment_likes,
+            c.date_added, 
+            c.date_modified
           FROM comments c
           LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+          LEFT JOIN users u ON c.user_id = u.id
           WHERE c.post_id = ?
           GROUP BY c.id, c.content
           `;
