@@ -233,6 +233,38 @@ router.post('/create-group', verifyToken, (req, res) => {
         }
     })
   });
+
+  // Handle Post Likes
+  router.post('/unlike', verifyToken, (req, res) => {
+
+        //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+    const userId = authorizedData.id;
+    const { postId } = req.body;
+  
+    const query = 'DELETE FROM post_likes WHERE post_id = ? AND user_id = ?';
+    db.query(query, [userId, postId], (err, result) => {
+      if (err) {
+        console.error('Error liking post:', err);
+        res.status(500).send('Error liking post');
+      } else {
+        console.log('Post unliked successfully');
+        return res.send({ 
+            error: false, 
+            data: null, 
+            message: 'Post unliked successfully' 
+        });
+      }
+    });
+
+        }
+    })
+  });
   
 // Handle Submitting Comments
 router.post('/comment', verifyToken, (req, res) => {
@@ -340,7 +372,24 @@ db.query(query, [userId, commentId], (err, result) => {
             const userId = authorizedData.id;
 
             
-    const query = "SELECT p.id AS post_id, p.content AS post_content, p.image_url AS post_image, p.is_public, COUNT(pl.id) AS num_likes FROM posts p LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE p.is_public = 0 GROUP BY p.id, p.content";
+    const query = `SELECT 
+    p.id AS post_id, 
+    p.content AS post_content, 
+    p.image_url AS post_image, 
+    p.is_public, 
+    COUNT(pl.id) AS num_likes, 
+    COUNT(c.id) AS num_comments, 
+    p.user_id, 
+    u.username, 
+    u.profile_photo, 
+    p.date_added, 
+    p.date_modified 
+    FROM posts p 
+    LEFT JOIN post_likes pl ON p.id = pl.post_id 
+    LEFT JOIN users u ON p.user_id = u.id 
+    LEFT JOIN comments c ON p.id = c.post_id 
+    WHERE p.is_public = 0 GROUP BY p.id, p.content
+    `;
   
     db.query(query, function (error, results) {
         if (error) throw error;
@@ -375,10 +424,18 @@ db.query(query, [userId, commentId], (err, result) => {
             p.image_url AS post_image,
             p.is_public,
             gp.group_id,
-            COUNT(pl.id) AS num_likes
+            COUNT(pl.id) AS num_likes,
+            COUNT(c.id) AS num_comments, 
+            p.user_id, 
+            u.username, 
+            u.profile_photo, 
+            p.date_added, 
+            p.date_modified 
           FROM posts p
           LEFT JOIN group_posts gp ON p.id = gp.post_id
           LEFT JOIN post_likes pl ON p.id = pl.post_id
+          LEFT JOIN users u ON p.user_id = u.id 
+          LEFT JOIN comments c ON p.id = c.post_id 
           WHERE p.is_public = 0
             AND (p.user_id = ? OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = ?))
           GROUP BY p.id, p.content, p.is_public, gp.group_id
