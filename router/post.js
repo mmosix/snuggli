@@ -248,10 +248,10 @@ router.post('/create-group', verifyToken, (req, res) => {
     const { postId } = req.body;
   
     const query = 'DELETE FROM post_likes WHERE post_id = ? AND user_id = ?';
-    db.query(query, [userId, postId], (err, result) => {
+    db.query(query, [postId, userId], (err, result) => {
       if (err) {
-        console.error('Error liking post:', err);
-        res.status(500).send('Error liking post');
+        console.error('Error unliking post:', err);
+        res.status(500).send('Error unliking post');
       } else {
         console.log('Post unliked successfully');
         return res.send({ 
