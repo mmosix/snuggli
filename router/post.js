@@ -377,21 +377,23 @@ db.query(query, [userId, commentId], (err, result) => {
     p.content AS post_content, 
     p.image_url AS post_image, 
     p.is_public, 
-    COUNT(pl.id) AS num_likes, 
-    COUNT(c.id) AS num_comments, 
+    COUNT(DISTINCT pl.id) AS num_likes,
+    MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS user_has_liked,
+    COUNT(DISTINCT c.id) AS num_comments, 
     p.user_id, 
     u.username, 
     u.profile_photo, 
     p.date_added, 
     p.date_modified 
-    FROM posts p 
-    LEFT JOIN post_likes pl ON p.id = pl.post_id 
-    LEFT JOIN users u ON p.user_id = u.id 
-    LEFT JOIN comments c ON p.id = c.post_id 
-    WHERE p.is_public = 0 GROUP BY p.id, p.content
+FROM posts p 
+LEFT JOIN post_likes pl ON p.id = pl.post_id 
+LEFT JOIN users u ON p.user_id = u.id 
+LEFT JOIN comments c ON p.id = c.post_id 
+WHERE p.is_public = 1 
+GROUP BY p.id, p.content, p.image_url, p.is_public, p.user_id, u.username, u.profile_photo, p.date_added, p.date_modified
     `;
   
-    db.query(query, function (error, results) {
+    db.query(query, [userId], function (error, results) {
         if (error) throw error;
         return res.send({ 
             error: false, 
@@ -424,24 +426,33 @@ db.query(query, [userId, commentId], (err, result) => {
             p.image_url AS post_image,
             p.is_public,
             gp.group_id,
-            COUNT(pl.id) AS num_likes,
-            COUNT(c.id) AS num_comments, 
-            p.user_id, 
-            u.username, 
-            u.profile_photo, 
-            p.date_added, 
-            p.date_modified 
-          FROM posts p
-          LEFT JOIN group_posts gp ON p.id = gp.post_id
-          LEFT JOIN post_likes pl ON p.id = pl.post_id
-          LEFT JOIN users u ON p.user_id = u.id 
-          LEFT JOIN comments c ON p.id = c.post_id 
-          WHERE p.is_public = 0
-            AND (p.user_id = ? OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = ?))
-          GROUP BY p.id, p.content, p.is_public, gp.group_id
+            COUNT(DISTINCT pl.id) AS num_likes,
+            MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS user_has_liked,
+            COUNT(DISTINCT c.id) AS num_comments,
+            p.user_id,
+            u.username,
+            u.profile_photo,
+            MAX(p.date_added) AS max_date_added,
+            MAX(p.date_modified) AS max_date_modified
+        FROM posts p
+        LEFT JOIN group_posts gp ON p.id = gp.post_id
+        LEFT JOIN post_likes pl ON p.id = pl.post_id
+        LEFT JOIN users u ON p.user_id = u.id
+        LEFT JOIN comments c ON p.id = c.post_id
+        WHERE p.is_public = 0
+            AND (p.user_id = 14 OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = 14))
+        GROUP BY
+            p.id,
+            p.content,
+            p.image_url,
+            p.is_public,
+            gp.group_id,
+            p.user_id,
+            u.username,
+            u.profile_photo;
           `;
           
-            db.query(query, [userId, userId], function (error, results) {
+            db.query(query, [userId, userId, userId], function (error, results) {
                 if (error) throw error;
                 return res.send({ 
                     error: false, 
