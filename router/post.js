@@ -440,7 +440,7 @@ GROUP BY p.id, p.content, p.image_url, p.is_public, p.user_id, u.username, u.pro
         LEFT JOIN users u ON p.user_id = u.id
         LEFT JOIN comments c ON p.id = c.post_id
         WHERE p.is_public = 0
-            AND (p.user_id = 14 OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = 14))
+            AND (p.user_id = ? OR gp.group_id IN (SELECT group_id FROM group_users WHERE user_id = ?))
         GROUP BY
             p.id,
             p.content,
