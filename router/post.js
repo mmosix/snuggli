@@ -328,6 +328,39 @@ db.query(query, [userId, commentId], (err, result) => {
     }
 })
   });
+
+  // Handle Post Likes
+  router.post('/unlike-comment', verifyToken, (req, res) => {
+
+        //verify the JWT token generated for the therapist
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if(err){
+            //If error send 
+        res.status(422).send({ error: true,  message: 'Please provide authorization token' });
+        } else {
+            //If token is successfully verified, we can send the autorized data 
+    const userId = authorizedData.id;
+    const { commentId } = req.body;
+  
+    const query = 'DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?';
+    db.query(query, [commentId, userId], (err, result) => {
+      if (err) {
+        console.error('Error unliking Comment:', err);
+        res.status(500).send('Error unliking Comment');
+      } else {
+        console.log('Comment unliked successfully');
+        return res.send({ 
+            error: false, 
+            data: null, 
+            message: 'Comment unliked successfully' 
+        });
+      }
+    });
+
+        }
+    })
+  });
+  
   
   // Retrieve Post Details
   router.get('/:postId/details', verifyToken, (req, res) => {
