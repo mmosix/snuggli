@@ -1,77 +1,79 @@
 const express = require('express');
 const router = express.Router();
-const  { conn, db } = require('../database');
+const { db } = require('../database');
 
-// Retrieve all avatars 
+// Retrieve all avatars
 router.get('/all', function (req, res) {
+    // Fetch all avatars from the database
     db.query('SELECT * FROM avatars', function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'avatars list.' });
+        return res.send({ error: false, data: results, message: 'Avatars list.' });
     });
 });
- 
- 
-// Retrieve school with id 
+
+// Retrieve avatar with id
 router.get('/single/:id', function (req, res) {
-  
-    let school_id = req.params.id;
-  
-    if (!school_id) {
-        return res.status(400).send({ error: true, data: null, message: 'Please provide user_id' });
+    // Extract the avatar_id from the request parameters
+    let avatar_id = req.params.id;
+
+    if (!avatar_id) {
+        return res.status(400).send({ error: true, data: null, message: 'Please provide avatar_id' });
     }
-  
+
+    // Fetch a single avatar by its ID from the database
     db.query('SELECT * FROM avatars where avatar_id=?', avatar_id, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'single avatar.' });
+        return res.send({ error: false, data: results[0], message: 'Single avatar.' });
     });
-  
 });
- 
-// Add a new user  
+
+// Add a new avatar
 router.post('/add', function (req, res) {
-  
+    // Extract the user data from the request body
     let user = req.body.user;
-  
+
     if (!user) {
-        return res.status(400).send({ error:true, data: null, message: 'Please provide user' });
+        return res.status(400).send({ error: true, data: null, message: 'Please provide user' });
     }
-  
-    db.query("INSERT INTO avatars SET ? ", { user: user }, function (error, results, fields) {
+
+    // Insert a new avatar record into the database
+    db.query("INSERT INTO avatars SET ?", { user: user }, function (error, results, fields) {
         if (error) throw error;
         return res.send({ error: false, data: results, message: 'New avatar has been created successfully.' });
     });
 });
- 
- 
-//  Update user with id
+
+// Update avatar with id
 router.put('/update', function (req, res) {
-  
+    // Extract avatar_id and avatar from the request body
     let avatar_id = req.body.avatar_id;
     let avatar = req.body.avatar;
-  
-    if (!user_id || !user) {
+
+    if (!avatar_id || !avatar) {
         return res.status(400).send({ error: true, data: null, message: 'Please provide avatar and avatar_id' });
     }
-  
-    db.query("UPDATE avatars SET avatar_id = ? WHERE avatar_id = ?", [avatar, avatar_id], function (error, results, fields) {
+
+    // Update the avatar record in the database
+    db.query("UPDATE avatars SET avatar = ? WHERE avatar_id = ?", [avatar, avatar_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'avatar has been updated successfully.' });
+        return res.send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
     });
 });
- 
- 
-//  Delete user
+
+// Delete avatar
 router.delete('/delete', function (req, res) {
-  
+    // Extract avatar_id from the request body
     let avatar_id = req.body.avatar_id;
-  
+
     if (!avatar_id) {
-        return res.status(400).send({ error: true, data:null, message: 'Please provide avatar_id' });
+        return res.status(400).send({ error: true, data: null, message: 'Please provide avatar_id' });
     }
-    db.query('DELETE FROM avatars WHERE id = ?', [avatar_id], function (error, results, fields) {
+
+    // Delete the avatar record from the database
+    db.query('DELETE FROM avatars WHERE avatar_id = ?', [avatar_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'avatar has been updated successfully.' });
+        return res.send({ error: false, data: results, message: 'Avatar has been deleted successfully.' });
     });
-}); 
- 
+});
+
 module.exports = router;
