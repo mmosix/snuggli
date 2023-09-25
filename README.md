@@ -1,1 +1,1 @@
-# snuggli
+# Snuggli API
