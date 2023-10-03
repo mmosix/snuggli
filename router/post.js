@@ -112,7 +112,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                 const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url, community_id) VALUES (?, ?, ?, ?, ?)';
 
                 // Insert post with image URL into the database
-                db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
+                db.query(insertPostQuery, [userId, content, isPublic, imageUrl, communityId], (err, result) => {
                     if (err) {
                         console.error('Error submitting post:', err);
                         return res.status(500).send({ error: true,data:null,message:'An error occurred while submitting the post: ' + err });
@@ -151,7 +151,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
             const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url, community_id) VALUES (?, ?, ?, ?, ?)';
 
             // Insert post without image URL into the database
-            db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
+            db.query(insertPostQuery, [userId, content, isPublic, communityId], (err, result) => {
                 if (err) {
                     console.error('Error submitting post:', err);
                     return res.status(500).json({ error:true,data:null,message: 'An error occurred while submitting the post: ' + err });
