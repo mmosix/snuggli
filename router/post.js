@@ -96,7 +96,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
             return res.status(422).send({ error: true, data:null,message: 'Please provide authorization token' });
         }
 
-        const { content, isPublic, groupId } = req.body;
+        const { content, isPublic, groupId, communityId } = req.body;
         const userId = authorizedData.id;
 
         // Handle file upload to Cloudinary
@@ -109,7 +109,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
 
                 const imageUrl = result.secure_url;
 
-                const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url) VALUES (?, ?, ?, ?)';
+                const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url, community_id) VALUES (?, ?, ?, ?, ?)';
 
                 // Insert post with image URL into the database
                 db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
@@ -148,7 +148,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                 });
             }).end(req.file.buffer);
         } else {
-            const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)';
+            const insertPostQuery = 'INSERT INTO posts (user_id, content, is_public, image_url, community_id) VALUES (?, ?, ?, ?, ?)';
 
             // Insert post without image URL into the database
             db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
