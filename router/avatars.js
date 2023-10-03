@@ -56,7 +56,7 @@ router.put('/update', function (req, res) {
     // Update the avatar record in the database
     db.query("UPDATE avatars SET avatar = ? WHERE avatar_id = ?", [avatar, avatar_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
+        return res.status(200).send({ error: false, data: results, message: 'Avatar has been updated successfully.' });
     });
 });
 

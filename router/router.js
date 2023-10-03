@@ -15,13 +15,13 @@ const verifyToken = (req, res, next)=>{
         next();
     } else {
         //If header is undefined return Forbidden (403)
-        res.sendStatus(403)
+        return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
     }
  };
 
 // default route
 router.get('/', function (req, res) {
-    return res.send({ error: true, message: 'Hello, this is Snuggli' })
+    return res.status(400).send({ error: true,data:null, message: 'Hello, this is Snuggli' })
 });
 
 router.get('/search/:search_term', async (req, res) => {
@@ -61,7 +61,7 @@ router.get('/search/:search_term', async (req, res) => {
         });
 
         // Send the response
-        return res.send({ 
+        return res.status(200).send({ 
             error: false, 
             data: response, 
             message: 'Search data' 
@@ -69,7 +69,7 @@ router.get('/search/:search_term', async (req, res) => {
     
     } catch (error) {
         console.error('Error searching:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).send({error: true, data: null,  error: 'Internal Server Error' });
     }
 });
 

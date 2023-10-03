@@ -33,7 +33,7 @@ router.post('/forgotPassword', async (req, res, next) => {
 
         if (!user) {
             // Return an OK response to prevent email enumeration
-            return res.json({ status: 'ok' });
+            return res.status(200).send({error:false, data:null, message: 'successful' });
         }
 
         // Expire old and expired tokens for this user
@@ -51,10 +51,8 @@ router.post('/forgotPassword', async (req, res, next) => {
         // Send an email with the reset token
         await sendPasswordResetEmail(email, resetToken, origin);
 
-        res.json({
-            message: 'Please check your email for the password reset process',
-            token: resetToken
-        });
+
+        return res.status(200).send({ error: false, data: resetToken, message: 'Please check your email for the password reset process' });
     } catch (e) {
         console.log(e);
     }
@@ -80,8 +78,8 @@ router.post('/resetPassword', validateResetToken, async (req, res, next) => {
 
         // Expire old and expired tokens for this user
         await conn.expireOldTokens(email, 1);
-
-        res.json({ message: 'Password reset successful, you can now login with the new password' });
+        return res.status(400).send({ error: true, data: null, message: 'Password reset successful, you can now login with the new password' });
+        
     } catch (e) {
         console.log(e);
     }
@@ -102,7 +100,7 @@ router.post('/get-user', async (req, res, next) => {
 
         const results = await conn.getUserByID(decoded.id);
 
-        return res.send({ error: false, data: results, message: 'Single user data' });
+        return res.status(200).send({ error: false, data: results, message: 'Single user data' });
     } catch (e) {
         console.log(e);
     }
@@ -164,7 +162,7 @@ router.post('/register', signupValidation, async (req, res, next) => {
         let username = req.body.username;
 
         if (!name || !email || !password) {
-            return res.sendStatus(400);
+            return res.status(400);
         }
 
         const check = await conn.getUserByEmail(email);
@@ -191,7 +189,7 @@ router.post('/register', signupValidation, async (req, res, next) => {
         }
     } catch (e) {
         console.log(e);
-        res.sendStatus(400);
+        return res.status(400).send({ error: true, data: null, message: 'Regidtration Failed' });
     }
 });
 
@@ -282,7 +280,7 @@ async function validateResetToken(req, res, next) {
     const resetToken = req.body.token;
 
     if (!resetToken || !email) {
-        return res.sendStatus(400);
+        return res.status(400).send({ error: true, data: null, message: 'Invalid Token...' });
     }
 
     // Verify if the token exists in the resetPasswordToken table and is not expired
@@ -291,7 +289,7 @@ async function validateResetToken(req, res, next) {
     const token = await conn.findValidToken(resetToken, email, currentTime);
 
     if (!token) {
-        res.json('Invalid token, please try again.');
+        return res.status(400).send({ error: true, data: null, message: 'Invalid token, please try again.' });
     }
 
     next();
@@ -302,24 +300,19 @@ async function verifyToken(req, res, next) {
     const token = req.cookies.token;
 
     if (token === undefined) {
-        return res.json({
-            message: "Access Denied! Unauthorized User"
-        });
+        return res.status(400).send({ error: true, data: null, message: 'Access Denied! Unauthorized User' });
+
     } else {
         jsonwebtoken.verify(token, privateKey, (err, authData) => {
             if (err) {
-                res.json({
-                    message: "Invalid Token..."
-                });
+                return res.status(400).send({ error: true, data: null, message: 'Invalid Token...' });
             } else {
                 console.log(authData.user.role);
                 const role = authData.user.role;
                 if (role === "admin") {
                     next();
                 } else {
-                    return res.json({
-                        message: "Access Denied! You are not an Admin"
-                    });
+                    return res.status(400).send({ error: true, data: null, message: 'Access Denied! You are not an Admin' });
                 }
             }
         });

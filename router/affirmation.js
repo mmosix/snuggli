@@ -7,7 +7,7 @@ router.get('/', function (req, res) {
     // Fetch all affirmations from the database
     db.query('SELECT * FROM affirmation', function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Affirmations list.' });
+        return res.status(200).send({ error: false, data: results, message: 'Affirmations list.' });
     });
 });
 
@@ -16,7 +16,7 @@ router.get('/today', function (req, res) {
     // Fetch today's affirmation with id 1 from the database
     db.query('SELECT * FROM affirmation WHERE id = 1', function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'Today\'s affirmation.' });
+        return res.status(200).send({ error: false, data: results[0], message: 'Today\'s affirmation.' });
     });
 });
 
@@ -26,13 +26,13 @@ router.get('/:id', function (req, res) {
     let user_id = req.params.id;
 
     if (!user_id) {
-        return res.status(400).send({ error: true, message: 'Please provide user_id' });
+        return res.status(400).send({ error: true,data:null, message: 'Please provide user_id' });
     }
 
     // Fetch an affirmation by its ID from the database
     db.query('SELECT * FROM affirmation where id=?', user_id, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results[0], message: 'Affirmation by id.' });
+        return res.status(200).send({ error: false, data: results[0], message: 'Affirmation by id.' });
     });
 });
 
@@ -42,13 +42,13 @@ router.post('/add', function (req, res) {
     let user = req.body.user;
 
     if (!user) {
-        return res.status(400).send({ error: true, message: 'Please provide user' });
+        return res.status(400).send({ error: true, data:null,message: 'Please provide user' });
     }
 
     // Insert a new affirmation record into the database
     db.query("INSERT INTO affirmation SET ?", { user: user }, function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'New affirmation has been created successfully.' });
+        return res.status(201).send({ error: false, data: results, message: 'New affirmation has been created successfully.' });
     });
 });
 
@@ -59,13 +59,13 @@ router.put('/update', function (req, res) {
     let user = req.body.user;
 
     if (!user_id || !user) {
-        return res.status(400).send({ error: true, message: 'Please provide user and user_id' });
+        return res.status(400).send({ error: true,data:null ,message: 'Please provide user and user_id' });
     }
 
     // Update the affirmation record in the database
     db.query("UPDATE affirmation SET user = ? WHERE id = ?", [user, user_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Affirmation has been updated successfully.' });
+        return res.status(201).send({ error: false, data: results, message: 'Affirmation has been updated successfully.' });
     });
 });
 
@@ -75,13 +75,13 @@ router.delete('/delete', function (req, res) {
     let user_id = req.body.user_id;
 
     if (!user_id) {
-        return res.status(400).send({ error: true, message: 'Please provide user_id' });
+        return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
     }
 
     // Delete the affirmation record from the database
     db.query('DELETE FROM affirmation WHERE id = ?', [user_id], function (error, results, fields) {
         if (error) throw error;
-        return res.send({ error: false, data: results, message: 'Affirmation has been deleted successfully.' });
+        return res.status(200).send({ error: false, data: results, message: 'Affirmation has been deleted successfully.' });
     });
 });
 

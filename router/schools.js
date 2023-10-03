@@ -6,7 +6,7 @@ const  { conn, db } = require('../database'); // Import necessary modules and da
 router.get('/all', function (req, res) {
     db.query('SELECT * FROM schools', function (error, results, fields) {
         if (error) throw error; // Handle any database query errors
-        return res.send({ error: false, data: results, message: 'users list.' }); // Send the retrieved data as a JSON response
+        return res.status(200).send({ error: false, data: results, message: 'users list.' }); // Send the retrieved data as a JSON response
     });
 });
 
@@ -21,7 +21,7 @@ router.get('/single/:id', function (req, res) {
 
     db.query('SELECT * FROM schools where school_id=?', school_id, function (error, results, fields) {
         if (error) throw error; // Handle any database query errors
-        return res.send({ error: false, data: results[0], message: 'users list.' }); // Send the retrieved data as a JSON response
+        return res.status(200).send({ error: false, data: results[0], message: 'users list.' }); // Send the retrieved data as a JSON response
     });
 });
 
@@ -36,7 +36,7 @@ router.post('/add', function (req, res) {
 
     db.query("INSERT INTO schools SET ? ", { user: user }, function (error, results, fields) {
         if (error) throw error; // Handle any database query errors
-        return res.send({ error: false, data: results, message: 'New user has been created successfully.' }); // Send a success message as a JSON response
+        return res.status(200).send({ error: false, data: results, message: 'New user has been created successfully.' }); // Send a success message as a JSON response
     });
 });
 
@@ -52,7 +52,7 @@ router.put('/update', function (req, res) {
 
     db.query("UPDATE schools SET user = ? WHERE id = ?", [user, user_id], function (error, results, fields) {
         if (error) throw error; // Handle any database query errors
-        return res.send({ error: false, data: results, message: 'user has been updated successfully.' }); // Send a success message as a JSON response
+        return res.status(200).send({ error: false, data: results, message: 'user has been updated successfully.' }); // Send a success message as a JSON response
     });
 });
 
@@ -67,7 +67,7 @@ router.delete('/delete', function (req, res) {
     
     db.query('DELETE FROM schools WHERE id = ?', [user_id], function (error, results, fields) {
         if (error) throw error; // Handle any database query errors
-        return res.send({ error: false, data: results, message: 'User has been updated successfully.' }); // Send a success message as a JSON response
+        return res.status(200).send({ error: false, data: results, message: 'User has been updated successfully.' }); // Send a success message as a JSON response
     });
 });
 

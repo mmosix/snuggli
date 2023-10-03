@@ -31,7 +31,7 @@ const verifyToken = (req, res, next) => {
         req.token = token;
         next();
     } else {
-        res.sendStatus(403); // Forbidden if the header is missing
+        return res.status(403).send({ error: true, data: null, message: 'Forbidden' }) // Forbidden if the header is missing
     }
 };
 
@@ -40,7 +40,7 @@ router.post('/create-group', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            return res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
         }
 
         const { groupName, users } = req.body;
@@ -51,7 +51,7 @@ router.post('/create-group', verifyToken, (req, res) => {
         db.query(insertGroupQuery, [groupName, userId], (err, result) => {
             if (err) {
                 console.error('Error creating group:', err);
-                return res.status(500).json({ error: 'An error occurred while creating the group' });
+                return res.status(500).json({ error: true, data:null, message:'An error occurred while creating the group' });
             }
 
             const groupId = result.insertId;
@@ -66,18 +66,19 @@ router.post('/create-group', verifyToken, (req, res) => {
                         console.error('Error adding group members:', err);
                         return res.status(500).send({
                             error: true,
+                            data:null,
                             message: 'An error occurred while adding group members'
                         });
                     }
 
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Group created successfully'
                     });
                 });
             } else {
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: null,
                     message: 'Group created successfully'
@@ -92,7 +93,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            return res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true, data:null,message: 'Please provide authorization token' });
         }
 
         const { content, isPublic, groupId } = req.body;
@@ -103,7 +104,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
             cloudinary.uploader.upload_stream({ resource_type: 'auto', folder: 'app/post' }, (error, result) => {
                 if (error) {
                     console.error('Error uploading image to Cloudinary:', error);
-                    return res.status(500).json({ error: 'An error occurred while uploading the image' });
+                    return res.status(500).send({ error:true,data:null ,message: 'An error occurred while uploading the image' });
                 }
 
                 const imageUrl = result.secure_url;
@@ -114,7 +115,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                 db.query(insertPostQuery, [userId, content, isPublic, imageUrl], (err, result) => {
                     if (err) {
                         console.error('Error submitting post:', err);
-                        return res.status(500).json({ error: 'An error occurred while submitting the post: ' + err });
+                        return res.status(500).send({ error: true,data:null,message:'An error occurred while submitting the post: ' + err });
                     }
 
                     const postId = result.insertId;
@@ -126,10 +127,10 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                         db.query(insertGroupPostQuery, [groupId, postId], (err) => {
                             if (err) {
                                 console.error('Error submitting group post:', err);
-                                return res.status(500).json({ error: 'An error occurred while submitting the group post: ' + err });
+                                return res.status(500).json({ error: true,data:null,message:'An error occurred while submitting the group post: ' + err });
                             } else {
                                 console.log('Group post inserted successfully');
-                                return res.send({
+                                return res.status(200).send({
                                     error: false,
                                     data: null,
                                     message: 'Private Post submitted successfully'
@@ -138,7 +139,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                         });
                     } else {
                         console.log('Skipping group post insertion');
-                        return res.send({
+                        return res.status(200).send({
                             error: false,
                             data: null,
                             message: 'Public Post submitted successfully'
@@ -153,7 +154,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
             db.query(insertPostQuery, [userId, content, isPublic], (err, result) => {
                 if (err) {
                     console.error('Error submitting post:', err);
-                    return res.status(500).json({ error: 'An error occurred while submitting the post: ' + err });
+                    return res.status(500).json({ error:true,data:null,message: 'An error occurred while submitting the post: ' + err });
                 }
 
                 const postId = result.insertId;
@@ -165,10 +166,10 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                     db.query(insertGroupPostQuery, [groupId, postId], (err) => {
                         if (err) {
                             console.error('Error submitting group post:', err);
-                            return res.status(500).json({ error: 'An error occurred while submitting the group post: ' + err });
+                            return res.status(500).send({ error: true,data:null,message:`An error occurred while submitting the group post: ${err}`});
                         } else {
                             console.log('Group post inserted successfully');
-                            return res.send({
+                            return res.status(200).send({
                                 error: false,
                                 data: null,
                                 message: 'Private Post submitted successfully'
@@ -177,7 +178,7 @@ router.post('/submit', upload.single('image'), verifyToken, (req, res) => {
                     });
                 } else {
                     console.log('Skipping group post insertion');
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Public Post submitted successfully'
@@ -193,7 +194,7 @@ router.post('/like', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+           return res.status(422).send({ error: true, data:null,message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             const { postId } = req.body;
@@ -202,10 +203,10 @@ router.post('/like', verifyToken, (req, res) => {
             db.query(query, [userId, postId], (err, result) => {
                 if (err) {
                     console.error('Error liking post:', err);
-                    res.status(500).send('Error liking post');
+                    return res.status(500).send({error:true,data:null,message:'Error liking post'});
                 } else {
                     console.log('Post liked successfully');
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Post liked successfully'
@@ -221,7 +222,7 @@ router.post('/unlike', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             const { postId } = req.body;
@@ -230,10 +231,10 @@ router.post('/unlike', verifyToken, (req, res) => {
             db.query(query, [postId, userId], (err, result) => {
                 if (err) {
                     console.error('Error unliking post:', err);
-                    res.status(500).send('Error unliking post');
+                    res.status(500).send({error:true,data:null, message:'Error unliking post'});
                 } else {
                     console.log('Post unliked successfully');
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Post unliked successfully'
@@ -249,7 +250,7 @@ router.post('/comment', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             const { postId, content } = req.body;
@@ -258,9 +259,9 @@ router.post('/comment', verifyToken, (req, res) => {
             db.query(query, [userId, postId, content], (err, result) => {
                 if (err) {
                     console.error('Error submitting comment:', err);
-                    res.status(500).send('Error submitting comment');
+                    return res.status(500).send({error:true,data:null,message:'Error submitting comment'});
                 } else {
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Comment submitted successfully'
@@ -276,7 +277,7 @@ router.post('/like-comment', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             const { commentId } = req.body;
@@ -285,10 +286,10 @@ router.post('/like-comment', verifyToken, (req, res) => {
             db.query(query, [userId, commentId], (err, result) => {
                 if (err) {
                     console.error('Error liking comment:', err);
-                    res.status(500).send('Error liking comment');
+                    return res.status(500).send({error:true,data:null,message:'Error liking comment'});
                 } else {
                     console.log('Comment liked successfully');
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Comment liked successfully'
@@ -304,7 +305,7 @@ router.post('/unlike-comment', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             const { commentId } = req.body;
@@ -313,10 +314,10 @@ router.post('/unlike-comment', verifyToken, (req, res) => {
             db.query(query, [commentId, userId], (err, result) => {
                 if (err) {
                     console.error('Error unliking Comment:', err);
-                    res.status(500).send('Error unliking Comment');
+                    return res.status(500).send({error: false, data: null,message:'Error unliking Comment'});
                 } else {
                     console.log('Comment unliked successfully');
-                    return res.send({
+                    return res.status(200).send({
                         error: false,
                         data: null,
                         message: 'Comment unliked successfully'
@@ -340,13 +341,21 @@ router.get('/:postId/details', verifyToken, (req, res) => {
     db.query(query, [postId], (err, result) => {
         if (err) {
             console.error('Error retrieving post details:', err);
-            res.status(500).send('Error retrieving post details');
+            return res.status(500).send({ 
+                error: true, 
+                data: null, 
+                message: 'Error retrieving post details'
+            });
         } else {
             const post = result[0];
             if (!post) {
-                res.status(404).send('Post not found');
+                return res.status(404).send({ 
+                    error: true, 
+                    data: null, 
+                    message: 'Post not found' 
+                });
             } else {
-                return res.send({ 
+                return res.status(200).send({ 
                     error: false, 
                     data: post, 
                     message: 'Single post data' 
@@ -361,7 +370,7 @@ router.get('/public', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
 
@@ -388,7 +397,7 @@ router.get('/public', verifyToken, (req, res) => {
 
             db.query(query, [userId], function (error, results) {
                 if (error) throw error;
-                return res.send({ 
+                return res.status(200).send({ 
                     error: false, 
                     data: results, 
                     message: 'public post data' 
@@ -403,7 +412,7 @@ router.get('/private', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
 
@@ -441,7 +450,7 @@ router.get('/private', verifyToken, (req, res) => {
 
             db.query(query, [userId, userId, userId], function (error, results) {
                 if (error) throw error;
-                return res.send({ 
+                return res.status(200).send({ 
                     error: false, 
                     data: results, 
                     message: 'private post data' 
@@ -456,7 +465,7 @@ router.get('/comments/:id', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             let post_id = req.params.id;
@@ -477,7 +486,7 @@ router.get('/comments/:id', verifyToken, (req, res) => {
 
             db.query(query, [post_id], function (error, results) {
                 if (error) throw error;
-                return res.send({ 
+                return res.status(200).send({ 
                     error: false, 
                     data: results, 
                     message: 'post comment data' 

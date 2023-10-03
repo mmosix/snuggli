@@ -19,7 +19,7 @@ const verifyToken = (req, res, next) => {
         next();
     } else {
         // If header is undefined, return Forbidden (403)
-        res.sendStatus(403);
+        return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
     }
 };
 
@@ -29,12 +29,12 @@ router.get('/', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send an error response
-            res.status(422).send({ error: true, message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
         } else {
             // If the token is successfully verified, retrieve the list of users
             db.query('SELECT * , "" as password FROM users', function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: results,
                     message: 'Users list.'
@@ -50,18 +50,18 @@ router.get('/user/:id', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, retrieve the user with the specified ID
             let user_id = req.params.id;
 
             if (!user_id) {
-                return res.status(400).send({ error: true, message: 'Please provide user_id' });
+                return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
             }
 
             db.query('SELECT * FROM users where id=?', user_id, function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: results[0],
                     message: 'User data.'
@@ -77,18 +77,18 @@ router.post('/add', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, add a new user
             let user = req.body.user;
 
             if (!user) {
-                return res.status(400).send({ error: true, message: 'Please provide user' });
+                return res.status(400).send({ error: true,data: null ,message: 'Please provide user' });
             }
 
             db.query("INSERT INTO users SET ? ", { user: user }, function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: results,
                     message: 'New user has been created successfully.'
@@ -104,19 +104,19 @@ router.put('/update', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, update the user
             let user_id = req.body.user_id;
             let user = req.body.user;
 
             if (!user_id || !user) {
-                return res.status(400).send({ error: true, message: 'Please provide user and user_id' });
+                return res.status(400).send({ error: true,data:null, message: 'Please provide user and user_id' });
             }
 
             db.query("UPDATE users SET user = ? WHERE id = ?", [user, user_id], function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: results,
                     message: 'User has been updated successfully.'
@@ -132,19 +132,19 @@ router.put('/setMood', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, update the user's mood
             let user_id = authorizedData.id;
             let mood = req.body.mood_id;
 
             if (!user_id || !mood) {
-                return res.status(400).send({ error: true, message: 'Please provide user mood' });
+                return res.status(400).send({ error: true,data:null, message: 'Please provide user mood' });
             }
 
             db.query("UPDATE users SET mood = ? WHERE id = ?", [mood, user_id], function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: {},
                     message: 'Mood has been updated successfully.'
@@ -160,19 +160,19 @@ router.put('/setAvatar', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, update the user's avatar
             let user_id = authorizedData.id;
             let avatar = req.body.avatar_id;
 
             if (!user_id || !avatar) {
-                return res.status(400).send({ error: true, message: 'Please provide user avatar' });
+                return res.status(400).send({ error: true,data:null ,message: 'Please provide user avatar' });
             }
 
             db.query("UPDATE users SET avatar = ? WHERE id = ?", [avatar, user_id], function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(201).send({
                     error: false,
                     data: {},
                     message: 'Avatar has been updated successfully.'
@@ -188,18 +188,18 @@ router.delete('/delete', verifyToken, (req, res) => {
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             // If error, send Forbidden (403)
-            res.sendStatus(403);
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
         } else {
             // If the token is successfully verified, delete the user
             let user_id = req.body.user_id;
 
             if (!user_id) {
-                return res.status(400).send({ error: true, message: 'Please provide user_id' });
+                return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
             }
 
             db.query('DELETE FROM users WHERE id = ?', [user_id], function (error, results, fields) {
                 if (error) throw error;
-                return res.send({
+                return res.status(200).send({
                     error: false,
                     data: results,
                     message: 'User has been deleted successfully.'

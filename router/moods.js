@@ -11,7 +11,7 @@ router.get('/all', (req, res) => {
             return res.status(500).send({ error: true, data: null, message: 'Error fetching moods' });
         }
         // Return the list of moods as a response
-        return res.send({ error: false, data: results, message: 'Moods list.' });
+        return res.status(200).send({ error: false, data: results, message: 'Moods list.' });
     });
 });
 
@@ -35,7 +35,7 @@ router.get('/single/:id', (req, res) => {
             return res.status(404).send({ error: true, data: null, message: 'Mood not found' });
         }
         // Return the single mood as a response
-        return res.send({ error: false, data: results[0], message: 'Single mood.' });
+        return res.status(200).send({ error: false, data: results[0], message: 'Single mood.' });
     });
 });
 
@@ -76,7 +76,7 @@ router.put('/update/:id', (req, res) => {
             return res.status(500).send({ error: true, data: null, message: 'Error updating mood' });
         }
         // Return a success message as a response
-        return res.send({ error: false, data: results, message: 'Mood has been updated successfully.' });
+        return res.status(200).send({ error: false, data: results, message: 'Mood has been updated successfully.' });
     });
 });
 
@@ -96,7 +96,7 @@ router.delete('/delete/:id', (req, res) => {
             return res.status(500).send({ error: true, data: null, message: 'Error deleting mood' });
         }
         // Return a success message as a response
-        return res.send({ error: false, data: results, message: 'Mood has been deleted successfully.' });
+        return res.status(200).send({ error: false, data: results, message: 'Mood has been deleted successfully.' });
     });
 });
 
