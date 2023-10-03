@@ -54,7 +54,7 @@ router.post('/review', verifyToken, (req, res) => {
             const userId = authorizedData.id;
             const { reviewText, therapistId, ratings } = req.body;
 
-            const query = 'INSERT INTO therapistreview (review_text, therapist_id, user_id, ratings) VALUES (?, ?, ?, ?)';
+            const query = 'INSERT INTO therapistreview (review_text, therapist_id, user_id, date_added, ratings) VALUES (?, ?, ?, NOW(), ?)';
             db.query(query, [reviewText, therapistId, userId, ratings], (err, result) => {
                 if (err) {
                     return res.status(500).send({error:true,data:null,message:'Error posting review'});
