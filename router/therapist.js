@@ -44,6 +44,32 @@ router.get('/', verifyToken, (req, res) => {
     });
 });
 
+// Post a new review
+router.post('/review', verifyToken, (req, res) => {
+    // Verify JWT token and extract user ID
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if (err) {
+           return res.status(422).send({ error: true, data:null,message: 'Please provide authorization token' });
+        } else {
+            const userId = authorizedData.id;
+            const { reviewText, therapistId, ratings } = req.body;
+
+            const query = 'INSERT INTO therapistreview (review_text, therapist_id, user_id, ratings) VALUES (?, ?, ?, ?)';
+            db.query(query, [reviewText, therapistId, userId, ratings], (err, result) => {
+                if (err) {
+                    return res.status(500).send({error:true,data:null,message:'Error posting review'});
+                } else {
+                    return res.status(200).send({
+                        error: false,
+                        data: null,
+                        message: 'Review posted successfully'
+                    });
+                }
+            });
+        }
+    });
+});
+
 // Retrieve therapist reviews by therapist ID
 router.get('/reviews/:id', verifyToken, (req, res) => {
     // Verify the JWT token generated for the therapist

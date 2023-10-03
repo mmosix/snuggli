@@ -3,7 +3,7 @@ const router = express.Router();
 const { db } = require('../database');
 
 // Retrieve all affirmations
-router.get('/', function (req, res) {
+router.get('/all', function (req, res) {
     // Fetch all affirmations from the database
     db.query('SELECT * FROM affirmation', function (error, results, fields) {
         if (error) throw error;
