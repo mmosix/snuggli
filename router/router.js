@@ -37,24 +37,27 @@ router.get('/search/:search_term', async (req, res) => {
         // Process the result and create a response object
         const response = result.map(row => {
             if (row.type === 'user') {
+                const user = conn.getUserByID(row.id);
                 return {
                     type: 'user',
                     id: row.id,
-                    display: row.display
+                    display: user
                     // You can add more user-related attributes here
                 };
             } else if (row.type === 'community') {
+                const community = conn.getCommunityByID(row.id);
                 return {
                     type: 'community',
                     id: row.id,
-                    display: row.display
+                    display: community
                     // You can add more community-related attributes here
                 };
             } else if (row.type === 'post') {
+                const post = conn.getPostByID(row.id);
                 return {
                     type: 'post',
                     id: row.id,
-                    display: row.display
+                    display: post
                     // You can add more post-related attributes here
                 };
             }

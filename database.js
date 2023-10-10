@@ -202,5 +202,34 @@ conn.searchData = (search_term) => {
     });
 };
 
+// Get community by ID
+conn.getCommunityByID = (id) => {
+    return new Promise((resolve, reject) => {
+        pool.query('SELECT * FROM community where id=?', [id], (error, result) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(result[0]);
+        });
+    });
+};
+
+// Get post by ID
+conn.getPostByID = (id) => {
+    return new Promise((resolve, reject) => {
+        pool.query('SELECT p.*, u.username, COUNT(pl.id) AS num_likes ' +
+        'FROM posts p ' +
+        'INNER JOIN users u ON p.user_id = u.id ' +
+        'LEFT JOIN post_likes pl ON p.id = pl.post_id ' +
+        'WHERE p.id = ? ' +
+        'GROUP BY p.id', [id], (error, result) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(result[0]);
+        });
+    });
+};
+
 // Export the 'conn' object and 'db' for use in other parts of your application
 module.exports = { conn, db };
