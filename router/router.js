@@ -37,32 +37,24 @@ router.get('/search/:search_term', async (req, res) => {
         // Process the result and create a response object
         const response = result.map(row => {
             if (row.type === 'user') {
-                
-            db.query('SELECT * FROM users WHERE id=?', row.id, function (error, results, fields) {
-                if (error) throw error;
                 return {
                     type: 'user',
                     id: row.id,
-                    display: results
+                    display: row.display
                     // You can add more user-related attributes here
                 };
-
-            });
-
             } else if (row.type === 'community') {
-                const community = conn.getCommunityByID(row.id);
                 return {
                     type: 'community',
                     id: row.id,
-                    display: community
+                    display: row.display
                     // You can add more community-related attributes here
                 };
             } else if (row.type === 'post') {
-                const post = conn.getPostByID(row.id);
                 return {
                     type: 'post',
                     id: row.id,
-                    display: post
+                    display: row.display
                     // You can add more post-related attributes here
                 };
             }
