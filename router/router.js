@@ -2,22 +2,26 @@ const express = require('express');
 const router = express.Router();
 const  { conn, db } = require('../database');
 
-  
-//  Verify Token
-const verifyToken = (req, res, next)=>{
+const jsonwebtoken = require('jsonwebtoken');
+
+require('dotenv').config();
+const privateKey = process.env.JWT_PRIVATE_KEY; // Your private key for JWT
+
+// Middleware function to verify JWT token
+const verifyToken = (req, res, next) => {
     const header = req.headers.authorization;
 
-    if(typeof header !== 'undefined') {
+    if (typeof header !== 'undefined') {
         const bearer = header.split(' ');
         const token = bearer[1];
 
         req.token = token;
         next();
     } else {
-        //If header is undefined return Forbidden (403)
+        // If header is undefined, return Forbidden (403)
         return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
     }
- };
+};
 
 // default route
 router.get('/', function (req, res) {
