@@ -572,7 +572,7 @@ router.get('/comments/:id', verifyToken, (req, res) => {
             GROUP BY c.id, c.content
             `;
 
-            db.query(query, [post_id], function (error, results) {
+            db.query(query, [userId, post_id], function (error, results) {
                 if (error) throw error;
                 return res.status(200).send({ 
                     error: false, 
