@@ -43,7 +43,7 @@ router.get('/search/:search_term', async (req, res) => {
                 return {
                     type: 'user',
                     id: row.id,
-                    display: results[0]
+                    display: results
                     // You can add more user-related attributes here
                 };
 
