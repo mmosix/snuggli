@@ -89,7 +89,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
             
             } catch (error) {
                 console.error('Error searching:', error);
-                res.status(500).send({error: true, data: null,  error: 'Internal Server Error' });
+                res.status(500).send({error: true, data: null, message: 'Internal Server Error' });
             }
         }
     });

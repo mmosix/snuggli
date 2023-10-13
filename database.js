@@ -233,9 +233,9 @@ conn.searchData = (search_term, userId) => {
         p.id
         FROM posts p INNER JOIN users u ON p.user_id = u.id 
         LEFT JOIN post_likes pl ON p.id = pl.post_id
-        LEFT JOIN comments c ON p.id = c.post_id WHERE content LIKE ? AND  p.is_public = 1 GROUP BY p.id, p.content, p.image_url, p.user_id, u.username, u.profile_photo, p.date_added;
+        LEFT JOIN comments c ON p.id = c.post_id WHERE p.content LIKE ? AND  p.is_public = 1 GROUP BY p.id, p.content, p.image_url, p.user_id, u.username, u.profile_photo, p.date_added;
         `;
-        pool.query(query, [search_term, userId, search_term, search_term], (error, result) => {
+        pool.query(query, [search_term, userId, search_term, userId, search_term], (error, result) => {
             if (error) {
                 return reject(error);
             }
