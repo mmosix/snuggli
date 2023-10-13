@@ -562,6 +562,7 @@ router.get('/comments/:id', verifyToken, (req, res) => {
                 c.content AS comment_content,
                 c.user_id, u.username, u.profile_photo, 
                 COUNT(cl.id) AS num_comment_likes,
+                MAX(CASE WHEN cl.user_id = ? THEN 1 ELSE 0 END) AS user_has_liked,
                 c.date_added, 
                 c.date_modified
             FROM comments c
