@@ -184,16 +184,12 @@ conn.findValidToken = (token, email, currentTime) => {
 };
 
 // Search data across multiple tables
-conn.searchData = (search_term) => {
+conn.searchData = (search_term, userId) => {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT 'user' AS type, id, username AS display FROM users WHERE username LIKE ?
-            UNION
-            SELECT 'community' AS type, id, name AS display FROM community WHERE name LIKE ?
-            UNION
-            SELECT 'post' AS type, id, content AS display FROM posts WHERE content LIKE ?
+        SELECT 'user' AS type, NULL AS content, NULL AS num_likes, NULL AS name, NULL AS followers, NULL AS i_follow, username, profile_photo, id FROM users WHERE username LIKE ? UNION SELECT 'community' AS type, NULL AS content, NULL AS num_likes, C.name, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow, NULL AS username, NULL AS profile_photo, C.id FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.name LIKE ? GROUP BY C.id UNION SELECT 'post' AS type, p.content, COUNT(pl.id) AS num_likes, NULL AS name, NULL AS followers, NULL AS i_follow, u.username, NULL AS profile_photo, p.id FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE content LIKE ? GROUP BY p.id;
         `;
-        pool.query(query, [search_term, search_term, search_term], (error, result) => {
+        pool.query(query, [search_term, userId, search_term, search_term], (error, result) => {
             if (error) {
                 return reject(error);
             }
@@ -202,17 +198,6 @@ conn.searchData = (search_term) => {
     });
 };
 
-// Get community by ID
-conn.getCommunityByID = (id) => {
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM community where id=?', [id], (error, result) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve(result[0]);
-        });
-    });
-};
 
 // Get post by ID
 conn.getPostByID = (id) => {
