@@ -37,13 +37,18 @@ router.get('/search/:search_term', async (req, res) => {
         // Process the result and create a response object
         const response = result.map(row => {
             if (row.type === 'user') {
-                const user = conn.getUserByID(row.id);
+                
+            db.query('SELECT * FROM users WHERE id=?', row.id, function (error, results, fields) {
+                if (error) throw error;
                 return {
                     type: 'user',
                     id: row.id,
-                    display: user
+                    display: results
                     // You can add more user-related attributes here
                 };
+
+            });
+
             } else if (row.type === 'community') {
                 const community = conn.getCommunityByID(row.id);
                 return {
