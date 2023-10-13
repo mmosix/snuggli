@@ -50,7 +50,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                     if (row.type === 'user') {
                         return {
                             type: 'user',
-                            id: row.id,
+                            user_id: row.id,
                             username: row.username,
                             profile_photo: row.profile_photo
                             // You can add more user-related attributes here
@@ -58,7 +58,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                     } else if (row.type === 'community') {
                         return {
                             type: 'community',
-                            id: row.id,
+                            community_id: row.id,
                             name: row.name,
                             followers: row.followers,
                             i_follow: row.i_follow
@@ -67,9 +67,14 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                     } else if (row.type === 'post') {
                         return {
                             type: 'post',
-                            id: row.id,
+                            post_id: row.id,
+                            content: row.content,
+                            post_image: row.post_image,
+                            user_has_liked: row.user_has_liked,
+                            num_comments: row.num_comments,
+                            date_added: row.date_added,
                             username: row.username,
-                            content: row.content
+                            user_profile_photo: row.profile_photo
                             // You can add more post-related attributes here
                         };
                     }

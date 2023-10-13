@@ -187,31 +187,59 @@ conn.findValidToken = (token, email, currentTime) => {
 conn.searchData = (search_term, userId) => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT 'user' AS type, NULL AS content, NULL AS num_likes, NULL AS name, NULL AS followers, NULL AS i_follow, username, profile_photo, id FROM users WHERE username LIKE ? UNION SELECT 'community' AS type, NULL AS content, NULL AS num_likes, C.name, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow, NULL AS username, NULL AS profile_photo, C.id FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.name LIKE ? GROUP BY C.id UNION SELECT 'post' AS type, p.content, COUNT(pl.id) AS num_likes, NULL AS name, NULL AS followers, NULL AS i_follow, u.username, NULL AS profile_photo, p.id FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN post_likes pl ON p.id = pl.post_id WHERE content LIKE ? GROUP BY p.id;
+        SELECT 'user' AS type, 
+        NULL AS content, 
+        NULL AS num_likes, 
+        NULL AS name, 
+        NULL AS followers, 
+        NULL AS i_follow, 
+        username, 
+        profile_photo,
+        NULL AS user_has_liked,
+        NULL AS num_comments, 
+        NULL AS post_image, 
+        NULL AS date_added, 
+        id 
+        FROM users WHERE username LIKE ? 
+        UNION 
+        SELECT 'community' AS type, 
+        NULL AS content, 
+        NULL AS num_likes, 
+        C.name, 
+        COUNT(CF.user_id) 
+        AS followers, 
+        MAX(CF.user_id = ?) as i_follow, 
+        NULL AS username, 
+        NULL AS profile_photo,
+        NULL AS user_has_liked,
+        NULL AS num_comments, 
+        NULL AS post_image, 
+        NULL AS date_added, 
+        C.id
+        FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.name LIKE ? GROUP BY C.id 
+        UNION 
+        SELECT 'post' AS type, 
+        p.content, 
+        COUNT(pl.id) AS num_likes, 
+        NULL AS name, 
+        NULL AS followers, 
+        NULL AS i_follow, 
+        u.username, 
+        u.profile_photo,
+        MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS user_has_liked,
+        COUNT(DISTINCT c.id) AS num_comments, 
+        p.image_url AS post_image, 
+        p.date_added, 
+        p.id
+        FROM posts p INNER JOIN users u ON p.user_id = u.id 
+        LEFT JOIN post_likes pl ON p.id = pl.post_id
+        LEFT JOIN comments c ON p.id = c.post_id WHERE content LIKE ? AND  p.is_public = 1 GROUP BY p.id, p.content, p.image_url, p.user_id, u.username, u.profile_photo, p.date_added;
         `;
         pool.query(query, [search_term, userId, search_term, search_term], (error, result) => {
             if (error) {
                 return reject(error);
             }
             return resolve(result);
-        });
-    });
-};
-
-
-// Get post by ID
-conn.getPostByID = (id) => {
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT p.*, u.username, COUNT(pl.id) AS num_likes ' +
-        'FROM posts p ' +
-        'INNER JOIN users u ON p.user_id = u.id ' +
-        'LEFT JOIN post_likes pl ON p.id = pl.post_id ' +
-        'WHERE p.id = ? ' +
-        'GROUP BY p.id', [id], (error, result) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve(result[0]);
         });
     });
 };
