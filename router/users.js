@@ -59,7 +59,7 @@ router.get('/user/:id', verifyToken, (req, res) => {
                 return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
             }
 
-            db.query('SELECT * FROM users where id=?', user_id, function (error, results, fields) {
+            db.query('SELECT * , "" as password FROM users where id=?', user_id, function (error, results, fields) {
                 if (error) throw error;
                 return res.status(200).send({
                     error: false,
@@ -70,6 +70,34 @@ router.get('/user/:id', verifyToken, (req, res) => {
         }
     });
 });
+
+// Retrieve user with a specific ID
+router.get('/profile', verifyToken, (req, res) => {
+    // Verify the JWT token generated for the user
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if (err) {
+            // If error, send Forbidden (403)
+            return res.status(403).send({ error: true, data: null, message: 'Forbidden' })
+        } else {
+            // If the token is successfully verified, retrieve the user with the specified ID
+            const userId = authorizedData.id;
+
+            if (!user_id) {
+                return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
+            }
+
+            db.query('SELECT * , "" as password FROM users where id=?', userId, function (error, results, fields) {
+                if (error) throw error;
+                return res.status(200).send({
+                    error: false,
+                    data: results[0],
+                    message: 'User data.'
+                });
+            });
+        }
+    });
+});
+
 
 // Add a new user
 router.post('/add', verifyToken, (req, res) => {

@@ -407,7 +407,7 @@ router.get('/public', verifyToken, (req, res) => {
     });
 });
 
-// Retrieve public Posts
+// Retrieve Posts by community
 router.get('/byCommunity/:id', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
@@ -451,8 +451,8 @@ router.get('/byCommunity/:id', verifyToken, (req, res) => {
     });
 });
 
-// Retrieve public Posts
-router.get('/byCommunity', verifyToken, (req, res) => {
+// Retrieve post made by user
+router.get('/byUser', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
