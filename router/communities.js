@@ -73,10 +73,6 @@ router.get('/my', verifyToken, (req, res) => {
         } else {
             const user_id = authorizedData.id;
 
-            if (!community_id) {
-                return res.status(400).send({ error: true,data:null ,message: 'Please provide community_id' });
-            }
-
             const query =`SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C 
             LEFT JOIN follow_community CF ON CF.community_id = C.id 
             WHERE CF.user_id = ? GROUP BY C.id
@@ -84,7 +80,7 @@ router.get('/my', verifyToken, (req, res) => {
 
             db.query(query, [user_id, user_id], function (error, results, fields) {
                 if (error) throw error;
-                return res.status(200).send({ error: false, data: results[0], message: 'Community list.' });
+                return res.status(200).send({ error: false, data: results, message: 'Community list.' });
             });
         }
     });
