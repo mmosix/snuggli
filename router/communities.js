@@ -182,4 +182,61 @@ router.delete('/delete', verifyToken, (req, res) => {
     });
 });
 
+// Handle Follow community
+router.post('/follow', verifyToken, (req, res) => {
+    // Verify JWT token and extract user ID
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if (err) {
+           return res.status(422).send({ error: true, data:null,message: 'Please provide authorization token' });
+        } else {
+            const userId = authorizedData.id;
+            const { community_id } = req.body;
+
+            const query = 'INSERT INTO community (user_id, community_id) VALUES (?, ?)';
+            db.query(query, [userId, community_id], (err, result) => {
+                if (err) {
+                    console.error('Error following community:', err);
+                    return res.status(500).send({error:true,data:null,message:'Error following community'});
+                } else {
+                    console.log('Community followed successfully');
+                    return res.status(200).send({
+                        error: false,
+                        data: null,
+                        message: 'Community followed'
+                    });
+                }
+            });
+        }
+    });
+});
+
+// Handle unfollow community
+router.post('/unfollow', verifyToken, (req, res) => {
+    // Verify JWT token and extract user ID
+    jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
+        if (err) {
+            return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
+        } else {
+            const userId = authorizedData.id;
+            const { community_id } = req.body;
+
+            const query = 'DELETE FROM community WHERE community_id = ? AND user_id = ?';
+            db.query(query, [community_id, userId], (err, result) => {
+                if (err) {
+                    console.error('Unfollow error:', err);
+                    res.status(500).send({error:true,data:null, message:'Unfollow error'});
+                } else {
+                    console.log('Community unfollowed successfully');
+                    return res.status(200).send({
+                        error: false,
+                        data: null,
+                        message: 'Community unfollowed successfully'
+                    });
+                }
+            });
+        }
+    });
+});
+
+
 module.exports = router;
