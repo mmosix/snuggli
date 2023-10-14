@@ -45,7 +45,7 @@ router.get('/', verifyToken, (req, res) => {
 });
 
 // Retrieve user with a specific ID
-router.get('/user/:id', verifyToken, (req, res) => {
+router.get('/:id/fetch', verifyToken, (req, res) => {
     // Verify the JWT token generated for the user
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
