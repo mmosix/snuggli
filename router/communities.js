@@ -192,7 +192,7 @@ router.post('/follow', verifyToken, (req, res) => {
             const userId = authorizedData.id;
             const { community_id } = req.body;
 
-            const query = 'INSERT INTO community (user_id, community_id) VALUES (?, ?)';
+            const query = 'INSERT INTO follow_community (user_id, community_id) VALUES (?, ?)';
             db.query(query, [userId, community_id], (err, result) => {
                 if (err) {
                     console.error('Error following community:', err);
@@ -220,7 +220,7 @@ router.post('/unfollow', verifyToken, (req, res) => {
             const userId = authorizedData.id;
             const { community_id } = req.body;
 
-            const query = 'DELETE FROM community WHERE community_id = ? AND user_id = ?';
+            const query = 'DELETE FROM follow_community WHERE community_id = ? AND user_id = ?';
             db.query(query, [community_id, userId], (err, result) => {
                 if (err) {
                     console.error('Unfollow error:', err);
