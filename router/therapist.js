@@ -85,7 +85,14 @@ router.get('/reviews/:id', verifyToken, (req, res) => {
                 return res.status(400).send({ error: true,data:null ,message: 'Please provide therapist_id' });
             }
 
-            db.query('SELECT * FROM therapistreview WHERE therapist_id=?', therapist_id, function (error, results, fields) {
+            const query =`
+            SELECT TR.*, U.username, U.profile_photo 
+            FROM therapistreview TR
+            LEFT JOIN users U ON TR.user_id = U.id
+            WHERE therapist_id=?
+            `;
+
+            db.query(query, therapist_id, function (error, results, fields) {
                 if (error) throw error;
                 return res.status(200).send({ error: false, data: results, message: 'All reviews by therapist ID.' });
             });
