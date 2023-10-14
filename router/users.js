@@ -82,10 +82,6 @@ router.get('/profile', verifyToken, (req, res) => {
             // If the token is successfully verified, retrieve the user with the specified ID
             const userId = authorizedData.id;
 
-            if (!user_id) {
-                return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
-            }
-
             db.query('SELECT * , "" as password FROM users where id=?', userId, function (error, results, fields) {
                 if (error) throw error;
                 return res.status(200).send({
