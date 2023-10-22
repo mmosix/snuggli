@@ -87,37 +87,59 @@ router.get('/my', verifyToken, (req, res) => {
 });
 
 // Retrieve recommended communities based on user's mood
-router.get('/recommend', verifyToken, (req, res) => {
-    // Verify the JWT token generated for the community
-    jsonwebtoken.verify(req.token, privateKey, async (err, authorizedData) => {
-        try {
+router.get('/recommend', verifyToken, async (req, res) => {
+    try {
+        // Verify the JWT token generated for the community
+        jsonwebtoken.verify(req.token, privateKey, async (err, authorizedData) => {
+            if (err) {
+                return res.status(422).send({ error: true, data: null, message: 'Invalid or missing authorization token' });
+            }
+
             const user_id = authorizedData.id;
             const user = await conn.getUserByID(user_id);
             const mood = user.mood;
 
             if (!mood) {
-                return res.status(400).send({ error: true, data:null,message: 'Please provide mood' });
+                return res.status(400).send({ error: true, data: null, message: 'Please provide mood' });
             }
 
-            db.query('SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.moods = ? GROUP BY C.id', [user_id, mood], function (error, results, fields) {
-                if (error) throw error;
+            const query = `
+                SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow
+                FROM community C
+                LEFT JOIN follow_community CF ON CF.community_id = C.id
+                WHERE C.moods = ?
+                GROUP BY C.id
+            `;
+
+            db.query(query, [user_id, mood], function (error, results, fields) {
+                if (error) {
+                    return res.status(500).send({ error: true, data: null, message: 'Database error' });
+                }
 
                 if (!results.length) {
-                    db.query("SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id GROUP BY C.id", user_id, function (err, results2, fields) {
-                        if (err) throw err;
+                    const query2 = `
+                        SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow
+                        FROM community C
+                        LEFT JOIN follow_community CF ON CF.community_id = C.id
+                        GROUP BY C.id
+                    `;
+
+                    db.query(query2, user_id, function (err, results2, fields) {
+                        if (err) {
+                            return res.status(500).send({ error: true, data: null, message: 'Database error' });
+                        }
                         return res.status(200).send({ error: false, data: results2, message: 'Recommended community list.' });
                     });
                 } else {
                     return res.status(200).send({ error: false, data: results, message: 'Recommended community list.' });
                 }
             });
-        } catch (err) {
-            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
-            console.error("Something went wrong")
-            console.error(err)
-        }
-    });
+        });
+    } catch (err) {
+        return res.status(500).send({ error: true, data: null, message: 'Internal server error' });
+    }
 });
+
 
 // Add a new community
 router.post('/add', verifyToken, (req, res) => {
