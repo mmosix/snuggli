@@ -99,7 +99,7 @@ router.get('/recommend', verifyToken, (req, res) => {
                 return res.status(400).send({ error: true, data:null,message: 'Please provide mood' });
             }
 
-            db.query('SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.moods LIKE "%?%" GROUP BY C.id', [user_id, mood], function (error, results, fields) {
+            db.query('SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C LEFT JOIN follow_community CF ON CF.community_id = C.id WHERE C.moods = ? GROUP BY C.id', [user_id, mood], function (error, results, fields) {
                 if (error) throw error;
 
                 if (!results.length) {
