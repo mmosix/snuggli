@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database');
+const { db, conn } = require('../database');
 const jsonwebtoken = require('jsonwebtoken');
 
 require('dotenv').config();
