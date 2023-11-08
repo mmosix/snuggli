@@ -52,6 +52,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                             type: 'user',
                             user_id: row.id,
                             username: row.username,
+                            school_name: row.name,
                             profile_photo: row.profile_photo
                             // You can add more user-related attributes here
                         };
@@ -60,6 +61,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                             type: 'community',
                             community_id: row.id,
                             name: row.name,
+                            about: row.content,
                             followers: row.followers,
                             i_follow: row.i_follow
                             // You can add more community-related attributes here
@@ -71,6 +73,7 @@ router.get('/search/:search_term', verifyToken, (req, res) => {
                             content: row.content,
                             post_image: row.post_image,
                             user_has_liked: row.user_has_liked,
+                            num_likes: row.num_likes,
                             num_comments: row.num_comments,
                             date_added: row.date_added,
                             username: row.username,

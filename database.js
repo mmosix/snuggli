@@ -190,20 +190,20 @@ conn.searchData = (search_term, userId) => {
         SELECT 'user' AS type, 
         NULL AS content, 
         NULL AS num_likes, 
-        NULL AS name, 
+        s.school_name AS name, 
         NULL AS followers, 
         NULL AS i_follow, 
-        username, 
-        profile_photo,
+        u.username, 
+        u.profile_photo,
         NULL AS user_has_liked,
         NULL AS num_comments, 
         NULL AS post_image, 
         NULL AS date_added, 
-        id 
-        FROM users WHERE username LIKE ? 
+        u.id 
+        FROM users u LEFT JOIN schools s ON u.school_id = s.school_id WHERE u.username LIKE ? GROUP BY u.id
         UNION 
         SELECT 'community' AS type, 
-        NULL AS content, 
+        c.about AS content, 
         NULL AS num_likes, 
         C.name, 
         COUNT(CF.user_id) 

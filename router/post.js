@@ -253,7 +253,8 @@ router.post('/comment', verifyToken, (req, res) => {
             res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
-            const { postId, content } = req.body;
+            const postId = req.body.postId;
+            const content = encodeURIComponent(req.body.content);
 
             const query = 'INSERT INTO comments (user_id, post_id, content) VALUES (?, ?, ?)';
             db.query(query, [userId, postId, content], (err, result) => {

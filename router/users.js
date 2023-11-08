@@ -82,7 +82,7 @@ router.get('/profile', verifyToken, (req, res) => {
             // If the token is successfully verified, retrieve the user with the specified ID
             const userId = authorizedData.id;
 
-            db.query('SELECT * , "" as password FROM users where id=?', userId, function (error, results, fields) {
+            db.query('SELECT u.* , "" as password, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.school_id WHERE u.username LIKE ? GROUP BY u.id', userId, function (error, results, fields) {
                 if (error) throw error;
                 return res.status(200).send({
                     error: false,
