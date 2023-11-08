@@ -203,7 +203,7 @@ conn.searchData = (search_term, userId) => {
         FROM users u LEFT JOIN schools s ON u.school_id = s.school_id WHERE u.username LIKE ? GROUP BY u.id
         UNION 
         SELECT 'community' AS type, 
-        c.about AS content, 
+        C.about AS content, 
         NULL AS num_likes, 
         C.name, 
         COUNT(CF.user_id) 
