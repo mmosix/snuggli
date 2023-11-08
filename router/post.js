@@ -553,12 +553,13 @@ router.get('/comments/:id', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
-            return res.status(422).send({ error: true,data:null ,message: 'Please provide authorization token' });
+            return res.status(422).send({ error: true, data: null, message: 'Please provide authorization token' });
         } else {
             const userId = authorizedData.id;
             let post_id = req.params.id;
 
-            const query = `SELECT
+            const query = `
+            SELECT
                 c.id AS comment_id,
                 c.content AS comment_content,
                 c.user_id, u.username, u.profile_photo, 
@@ -575,14 +576,21 @@ router.get('/comments/:id', verifyToken, (req, res) => {
 
             db.query(query, [userId, post_id], function (error, results) {
                 if (error) throw error;
-                return res.status(200).send({ 
-                    error: false, 
-                    data: results, 
-                    message: 'post comment data' 
+
+                // Decode comment_content for each result
+                results.forEach(result => {
+                    result.comment_content = decodeURIComponent(result.comment_content);
+                });
+
+                return res.status(200).send({
+                    error: false,
+                    data: results,
+                    message: 'post comment data'
                 });
             });
         }
     });
 });
+
 
 module.exports = router;
