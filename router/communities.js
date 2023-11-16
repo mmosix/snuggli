@@ -65,13 +65,13 @@ router.get('/single/:id', verifyToken, (req, res) => {
 });
 
 // Retrieve communities for a user
-router.get('/my', verifyToken, (req, res) => {
+router.get('/my/:id', verifyToken, (req, res) => {
     // Verify the JWT token generated for the community
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             return res.status(403).send({ error: true, data: null, message: 'Forbidden' });
         } else {
-            const user_id = authorizedData.id;
+            const user_id = req.params.id;
 
             const query =`SELECT C.*, COUNT(CF.user_id) AS followers, MAX(CF.user_id = ?) as i_follow FROM community C 
             LEFT JOIN follow_community CF ON CF.community_id = C.id 

@@ -59,7 +59,7 @@ router.get('/:id/fetch', verifyToken, (req, res) => {
                 return res.status(400).send({ error: true,data:null ,message: 'Please provide user_id' });
             }
 
-            db.query('SELECT * , "" as password FROM users where id=?', user_id, function (error, results, fields) {
+            db.query('SELECT u.* , "" as password, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.school_id WHERE u.id LIKE ?', user_id, function (error, results, fields) {
                 if (error) throw error;
                 return res.status(200).send({
                     error: false,

@@ -453,13 +453,13 @@ router.get('/byCommunity/:id', verifyToken, (req, res) => {
 });
 
 // Retrieve post made by user
-router.get('/byUser', verifyToken, (req, res) => {
+router.get('/byUser/:id', verifyToken, (req, res) => {
     // Verify JWT token and extract user ID
     jsonwebtoken.verify(req.token, privateKey, (err, authorizedData) => {
         if (err) {
             return res.status(422).send({ error: true,data:null, message: 'Please provide authorization token' });
         } else {
-            const userId = authorizedData.id;
+            const userId = req.params.id;
 
             const query = `SELECT 
                 p.id AS post_id, 
